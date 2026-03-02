@@ -1,0 +1,100 @@
+jobs:
+  get:
+    tags: [Jobs]
+    summary: List jobs with search and filters
+    parameters:
+      - name: search
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Search by title or location (partial match)
+      - name: title
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Filter jobs by title (partial match)
+      - name: location
+        in: query
+        required: false
+        schema:
+          type: string
+        description: Filter jobs by location (partial match)
+      - name: per_page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 15
+        description: Number of records per page
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          minimum: 1
+        description: Page number
+    responses:
+      '200':
+        description: Paginated job list
+        content:
+          application/json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/JobCollectionResponse'
+  post:
+    tags: [Jobs]
+    summary: Create a new job
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '../openapi.yaml#/components/schemas/JobRequest'
+    responses:
+      '201':
+        description: Job created
+        content:
+          application/json:
+            schema:
+              $ref: '../openapi.yaml#/components/schemas/JobResourceResponse'
+      '422':
+        $ref: '../openapi.yaml#/components/responses/UnprocessableEntity'
+
+summarizeJob:
+  parameters:
+    - $ref: '../openapi.yaml#/components/parameters/JobId'
+  post:
+    tags: [Jobs]
+    summary: Queue AI summary generation for a job
+    responses:
+      '200':
+        description: Summary processing started
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                message:
+                  type: string
+                  example: Processing...
+
+jobSummary:
+  parameters:
+    - $ref: '../openapi.yaml#/components/parameters/JobId'
+  get:
+    tags: [Jobs]
+    summary: Get cached summary result for a job
+    responses:
+      '200':
+        description: Job summary text
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: string
+                - type: 'null'
+      '404':
+        $ref: '../openapi.yaml#/components/responses/NotFound'

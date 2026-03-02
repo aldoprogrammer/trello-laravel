@@ -1,0 +1,56 @@
+Job:
+  type: object
+  properties:
+    id:
+      type: integer
+      example: 1
+    title:
+      type: string
+      example: Backend Engineer
+    location:
+      type: string
+      example: Jakarta
+    description:
+      type: string
+      example: Build and maintain backend APIs.
+    created_at:
+      type: string
+      format: date-time
+    updated_at:
+      type: string
+      format: date-time
+
+PaginatedJobs:
+  type: object
+  properties:
+    data:
+      type: array
+      items:
+        $ref: '#/Job'
+    links:
+      $ref: './common.yaml#/PaginationLinks'
+    meta:
+      $ref: './common.yaml#/PaginationMeta'
+
+JobRequest:
+  type: object
+  required: [title, location, description]
+  properties:
+    title:
+      type: string
+      maxLength: 255
+    location:
+      type: string
+      maxLength: 255
+    description:
+      type: string
+
+JobResourceResponse:
+  type: object
+  properties:
+    data:
+      $ref: '#/Job'
+
+JobCollectionResponse:
+  allOf:
+    - $ref: '#/PaginatedJobs'

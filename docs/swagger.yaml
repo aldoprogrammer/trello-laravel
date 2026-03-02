@@ -10,10 +10,32 @@ tags:
   - name: Auth
   - name: Projects
   - name: Tasks
+  - name: Jobs
 paths:
+  /api/auth/register:
+    post:
+      tags:
+        - Auth
+      summary: Register a new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuthRegisterRequest'
+      responses:
+        '201':
+          description: User registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseAuth'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
   /api/auth/login:
     post:
-      tags: [Auth]
+      tags:
+        - Auth
       summary: Login and receive an access token
       requestBody:
         required: true
@@ -32,24 +54,10 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
-  /api/auth/logout:
-    post:
-      tags: [Auth]
-      summary: Revoke the current access token
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Logout success
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponseEmpty'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
   /api/auth/me:
     get:
-      tags: [Auth]
+      tags:
+        - Auth
       summary: Get the authenticated user
       security:
         - bearerAuth: []
@@ -62,31 +70,38 @@ paths:
                 $ref: '#/components/schemas/ApiResponseUser'
         '401':
           $ref: '#/components/responses/Unauthorized'
-  /api/auth/register:
+  /api/auth/logout:
     post:
-      tags: [Auth]
-      summary: Register a new user
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AuthRegisterRequest'
+      tags:
+        - Auth
+      summary: Revoke the current access token
+      security:
+        - bearerAuth: []
       responses:
-        '201':
-          description: User registered
+        '200':
+          description: Logout success
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponseAuth'
-        '422':
-          $ref: '#/components/responses/UnprocessableEntity'
+                $ref: '#/components/schemas/ApiResponseEmpty'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /api/projects:
     get:
-      tags: [Projects]
+      tags:
+        - Projects
       summary: List projects for the authenticated user
       security:
         - bearerAuth: []
+      parameters:
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 15
+          description: Items per page
       responses:
         '200':
           description: Project list
@@ -97,7 +112,8 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
     post:
-      tags: [Projects]
+      tags:
+        - Projects
       summary: Create a project
       security:
         - bearerAuth: []
@@ -118,11 +134,12 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
-  /api/projects/{projectId}:
+  /api/projects/{project}:
     parameters:
       - $ref: '#/components/parameters/ProjectId'
     get:
-      tags: [Projects]
+      tags:
+        - Projects
       summary: Get project detail
       security:
         - bearerAuth: []
@@ -140,7 +157,8 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
     put:
-      tags: [Projects]
+      tags:
+        - Projects
       summary: Update a project
       security:
         - bearerAuth: []
@@ -166,7 +184,8 @@ paths:
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
     delete:
-      tags: [Projects]
+      tags:
+        - Projects
       summary: Delete a project
       security:
         - bearerAuth: []
@@ -185,7 +204,8 @@ paths:
           $ref: '#/components/responses/NotFound'
   /api/statuses:
     get:
-      tags: [Tasks]
+      tags:
+        - Tasks
       summary: List available task statuses
       security:
         - bearerAuth: []
@@ -198,14 +218,24 @@ paths:
                 $ref: '#/components/schemas/ApiResponseTaskStatuses'
         '401':
           $ref: '#/components/responses/Unauthorized'
-  /api/projects/{projectId}/tasks:
+  /api/projects/{project}/tasks:
     parameters:
       - $ref: '#/components/parameters/ProjectId'
     get:
-      tags: [Tasks]
+      tags:
+        - Tasks
       summary: List tasks for a project
       security:
         - bearerAuth: []
+      parameters:
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 15
+          description: Items per page
       responses:
         '200':
           description: Task list
@@ -220,7 +250,8 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
     post:
-      tags: [Tasks]
+      tags:
+        - Tasks
       summary: Create a task for a project
       security:
         - bearerAuth: []
@@ -245,30 +276,13 @@ paths:
           $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
-  /api/projects/{projectId}/tasks/{taskId}:
+  /api/projects/{project}/tasks/{task}:
     parameters:
       - $ref: '#/components/parameters/ProjectId'
       - $ref: '#/components/parameters/TaskId'
-    delete:
-      tags: [Tasks]
-      summary: Delete a task
-      security:
-        - bearerAuth: []
-      responses:
-        '200':
-          description: Task deleted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponseEmpty'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
-        '404':
-          $ref: '#/components/responses/NotFound'
     get:
-      tags: [Tasks]
+      tags:
+        - Tasks
       summary: Get task detail
       security:
         - bearerAuth: []
@@ -286,7 +300,8 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
     put:
-      tags: [Tasks]
+      tags:
+        - Tasks
       summary: Update a task
       security:
         - bearerAuth: []
@@ -311,6 +326,127 @@ paths:
           $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/UnprocessableEntity'
+    delete:
+      tags:
+        - Tasks
+      summary: Delete a task
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Task deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseEmpty'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/jobs:
+    get:
+      tags:
+        - Jobs
+      summary: List jobs with search and filters
+      parameters:
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Search by title or location (partial match)
+        - name: title
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter jobs by title (partial match)
+        - name: location
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Filter jobs by location (partial match)
+        - name: per_page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 15
+          description: Number of records per page
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+          description: Page number
+      responses:
+        '200':
+          description: Paginated job list
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobCollectionResponse'
+    post:
+      tags:
+        - Jobs
+      summary: Create a new job
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobRequest'
+      responses:
+        '201':
+          description: Job created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobResourceResponse'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /api/jobs/{id}/summarize:
+    parameters:
+      - $ref: '#/components/parameters/JobId'
+    post:
+      tags:
+        - Jobs
+      summary: Queue AI summary generation for a job
+      responses:
+        '200':
+          description: Summary processing started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Processing...
+  /api/jobs/{id}/summary:
+    parameters:
+      - $ref: '#/components/parameters/JobId'
+    get:
+      tags:
+        - Jobs
+      summary: Get cached summary result for a job
+      responses:
+        '200':
+          description: Job summary text
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: string
+                  - type: 'null'
+        '404':
+          $ref: '#/components/responses/NotFound'
 components:
   securitySchemes:
     bearerAuth:
@@ -319,19 +455,26 @@ components:
       bearerFormat: JWT
   parameters:
     ProjectId:
-      name: projectId
+      name: project
       in: path
       required: true
       schema:
         type: integer
       description: ID of the project
     TaskId:
-      name: taskId
+      name: task
       in: path
       required: true
       schema:
         type: integer
       description: ID of the task
+    JobId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+      description: ID of the job
   responses:
     Unauthorized:
       description: Unauthorized
@@ -515,13 +658,37 @@ components:
           example: Work with design to draft the hero section
         status:
           type: string
-          enum: [pending, in_progress, done]
+          enum:
+            - pending
+            - in_progress
+            - done
           example: pending
         due_date:
           type: string
           format: date
           nullable: true
-          example: 2025-12-31
+          example: '2025-12-31'
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+    Job:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: Backend Engineer
+        location:
+          type: string
+          example: Jakarta
+        description:
+          type: string
+          example: Build and maintain backend APIs.
         created_at:
           type: string
           format: date-time
@@ -584,6 +751,17 @@ components:
           $ref: '#/components/schemas/PaginationLinks'
         meta:
           $ref: '#/components/schemas/PaginationMeta'
+    PaginatedJobs:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Job'
+        links:
+          $ref: '#/components/schemas/PaginationLinks'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
     AuthPayload:
       type: object
       properties:
@@ -594,7 +772,10 @@ components:
           example: 1|yourtokenhere
     AuthRegisterRequest:
       type: object
-      required: [name, email, password, password_confirmation]
+      required:
+        - name
+        - email
+        - password
       properties:
         name:
           type: string
@@ -607,7 +788,9 @@ components:
           minLength: 8
     AuthLoginRequest:
       type: object
-      required: [email, password]
+      required:
+        - email
+        - password
       properties:
         email:
           type: string
@@ -617,7 +800,8 @@ components:
           format: password
     ProjectRequest:
       type: object
-      required: [name]
+      required:
+        - name
       properties:
         name:
           type: string
@@ -637,7 +821,8 @@ components:
           nullable: true
     TaskRequest:
       type: object
-      required: [title]
+      required:
+        - title
       properties:
         title:
           type: string
@@ -647,13 +832,16 @@ components:
           nullable: true
         status:
           type: string
-          enum: [pending, in_progress, done]
+          enum:
+            - pending
+            - in_progress
+            - done
           example: pending
         due_date:
           type: string
           format: date
           nullable: true
-          example: 2025-12-31
+          example: '2025-12-31'
     TaskUpdateRequest:
       type: object
       properties:
@@ -664,7 +852,10 @@ components:
           nullable: true
         status:
           type: string
-          enum: [pending, in_progress, done]
+          enum:
+            - pending
+            - in_progress
+            - done
         due_date:
           type: string
           format: date
@@ -674,7 +865,33 @@ components:
       properties:
         value:
           type: string
-          enum: [pending, in_progress, done]
+          enum:
+            - pending
+            - in_progress
+            - done
         label:
           type: string
           example: Pending
+    JobRequest:
+      type: object
+      required:
+        - title
+        - location
+        - description
+      properties:
+        title:
+          type: string
+          maxLength: 255
+        location:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+    JobResourceResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/Job'
+    JobCollectionResponse:
+      allOf:
+        - $ref: '#/components/schemas/PaginatedJobs'

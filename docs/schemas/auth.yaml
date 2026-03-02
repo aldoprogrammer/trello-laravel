@@ -1,0 +1,69 @@
+User:
+  type: object
+  properties:
+    id:
+      type: integer
+      example: 1
+    name:
+      type: string
+      example: Jane Doe
+    email:
+      type: string
+      format: email
+      example: jane@example.com
+    created_at:
+      type: string
+      format: date-time
+    updated_at:
+      type: string
+      format: date-time
+
+AuthPayload:
+  type: object
+  properties:
+    user:
+      $ref: '#/User'
+    token:
+      type: string
+      example: 1|yourtokenhere
+
+ApiResponseAuth:
+  allOf:
+    - $ref: './common.yaml#/ApiResponseBase'
+    - type: object
+      properties:
+        data:
+          $ref: '#/AuthPayload'
+
+ApiResponseUser:
+  allOf:
+    - $ref: './common.yaml#/ApiResponseBase'
+    - type: object
+      properties:
+        data:
+          $ref: '#/User'
+
+AuthRegisterRequest:
+  type: object
+  required: [name, email, password]
+  properties:
+    name:
+      type: string
+    email:
+      type: string
+      format: email
+    password:
+      type: string
+      format: password
+      minLength: 8
+
+AuthLoginRequest:
+  type: object
+  required: [email, password]
+  properties:
+    email:
+      type: string
+      format: email
+    password:
+      type: string
+      format: password

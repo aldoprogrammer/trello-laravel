@@ -1,0 +1,72 @@
+Project:
+  type: object
+  properties:
+    id:
+      type: integer
+      example: 10
+    user_id:
+      type: integer
+      example: 1
+    name:
+      type: string
+      example: Marketing board
+    description:
+      type: string
+      nullable: true
+      example: All marketing tasks
+    created_at:
+      type: string
+      format: date-time
+    updated_at:
+      type: string
+      format: date-time
+
+PaginatedProjects:
+  type: object
+  properties:
+    data:
+      type: array
+      items:
+        $ref: '#/Project'
+    links:
+      $ref: './common.yaml#/PaginationLinks'
+    meta:
+      $ref: './common.yaml#/PaginationMeta'
+
+ApiResponseProject:
+  allOf:
+    - $ref: './common.yaml#/ApiResponseBase'
+    - type: object
+      properties:
+        data:
+          $ref: '#/Project'
+
+ApiResponseProjects:
+  allOf:
+    - $ref: './common.yaml#/ApiResponseBase'
+    - type: object
+      properties:
+        data:
+          $ref: '#/PaginatedProjects'
+
+ProjectRequest:
+  type: object
+  required: [name]
+  properties:
+    name:
+      type: string
+      example: Sprint board
+    description:
+      type: string
+      nullable: true
+      example: Tasks for the sprint
+
+ProjectUpdateRequest:
+  type: object
+  properties:
+    name:
+      type: string
+      example: Updated board
+    description:
+      type: string
+      nullable: true

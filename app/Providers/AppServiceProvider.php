@@ -14,7 +14,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(\App\Contracts\AIServiceInterface::class, \App\Services\GeminiService::class);
     }
 
     /**
@@ -27,5 +27,14 @@ class AppServiceProvider extends ServiceProvider
                 Limit::perMinute(60)->by($request->user()?->id ?: $request->ip()),
             ];
         });
+        // Daftarkan Rate Limiter untuk Gemini
+        RateLimiter::for('gemini-api', function (object $job) {
+            // Batasi 5 request per menit untuk menjaga kestabilan API
+            return Limit::perMinute(5)->by('gemini-ai-key');
+        });
     }
+
+
+
+
 }

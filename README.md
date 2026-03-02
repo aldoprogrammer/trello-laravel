@@ -78,6 +78,7 @@ Endpoints utama:
 
 File Swagger: `docs/swagger.yaml`
 Import ke Swagger UI/Postman untuk eksplorasi skema request/response dan error (401/403/404/422).
+npx --yes @redocly/cli bundle docs/openapi.yaml -o docs/swagger.yaml
 
 ## Dummy Payloads (contoh)
 

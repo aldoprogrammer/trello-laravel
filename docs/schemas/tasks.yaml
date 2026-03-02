@@ -1,0 +1,118 @@
+Task:
+  type: object
+  properties:
+    id:
+      type: integer
+      example: 100
+    project_id:
+      type: integer
+      example: 10
+    user_id:
+      type: integer
+      example: 1
+    title:
+      type: string
+      example: Draft landing page
+    description:
+      type: string
+      nullable: true
+      example: Work with design to draft the hero section
+    status:
+      type: string
+      enum: [pending, in_progress, done]
+      example: pending
+    due_date:
+      type: string
+      format: date
+      nullable: true
+      example: 2025-12-31
+    created_at:
+      type: string
+      format: date-time
+    updated_at:
+      type: string
+      format: date-time
+
+TaskStatus:
+  type: object
+  properties:
+    value:
+      type: string
+      enum: [pending, in_progress, done]
+    label:
+      type: string
+      example: Pending
+
+PaginatedTasks:
+  type: object
+  properties:
+    data:
+      type: array
+      items:
+        $ref: '#/Task'
+    links:
+      $ref: './common.yaml#/PaginationLinks'
+    meta:
+      $ref: './common.yaml#/PaginationMeta'
+
+ApiResponseTask:
+  allOf:
+    - $ref: './common.yaml#/ApiResponseBase'
+    - type: object
+      properties:
+        data:
+          $ref: '#/Task'
+
+ApiResponseTasks:
+  allOf:
+    - $ref: './common.yaml#/ApiResponseBase'
+    - type: object
+      properties:
+        data:
+          $ref: '#/PaginatedTasks'
+
+ApiResponseTaskStatuses:
+  allOf:
+    - $ref: './common.yaml#/ApiResponseBase'
+    - type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/TaskStatus'
+
+TaskRequest:
+  type: object
+  required: [title]
+  properties:
+    title:
+      type: string
+      example: Write copy
+    description:
+      type: string
+      nullable: true
+    status:
+      type: string
+      enum: [pending, in_progress, done]
+      example: pending
+    due_date:
+      type: string
+      format: date
+      nullable: true
+      example: 2025-12-31
+
+TaskUpdateRequest:
+  type: object
+  properties:
+    title:
+      type: string
+    description:
+      type: string
+      nullable: true
+    status:
+      type: string
+      enum: [pending, in_progress, done]
+    due_date:
+      type: string
+      format: date
+      nullable: true
