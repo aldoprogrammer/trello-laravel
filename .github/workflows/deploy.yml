@@ -11,11 +11,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Deployment Scripts
+      - name: Deploy Scripts
         run: |
           cd /var/www/laravel
           git pull origin main
           composer install --no-dev --optimize-autoloader
+          php artisan migrate --force
           sudo -u www-data php artisan config:cache
           sudo -u www-data php artisan route:cache
           sudo -u www-data php artisan view:cache
