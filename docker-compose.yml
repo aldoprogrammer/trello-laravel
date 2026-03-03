@@ -1,0 +1,37 @@
+services:
+  app:
+    build:
+      context: .
+    container_name: laravel-app
+    restart: unless-stopped
+    working_dir: /var/www
+    volumes:
+      - .:/var/www
+    networks:
+      - backend
+
+  db:
+    image: mysql:8.0
+    container_name: laravel-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: trello_test_aldo
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_PASSWORD: root
+      MYSQL_USER: aldo
+    networks:
+      - backend
+
+  meilisearch:
+    image: getmeili/meilisearch:latest
+    container_name: laravel-meili
+    ports:
+      - "7700:7700"
+    environment:
+      - MEILI_MASTER_KEY=${MEILISEARCH_KEY}
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge

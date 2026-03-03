@@ -18,7 +18,8 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->throttleApi();
+        $middleware->throttleApi(); // Bawaan Laravel 11 buat throttling
+        $middleware->append(\App\Http\Middleware\SecurityHeaders::class); // Middleware buatan lu
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (ValidationException $exception) {

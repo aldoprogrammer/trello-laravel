@@ -32,7 +32,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('projects/{project}/tasks/{task}', [TaskController::class, 'destroy']);
 });
 
-Route::get('/jobs', [JobController::class, 'index']);
-Route::post('/jobs', [JobController::class, 'store']);
-Route::post('/jobs/{id}/summarize', [JobController::class, 'summarize']);
-Route::get('/jobs/{id}/summary', [JobController::class, 'summary']);
+
+// Update bagian bawah api.php lu:
+Route::middleware('throttle:60,1')->group(function () {
+    Route::get('/jobs', [JobController::class, 'index']);
+    Route::post('/jobs', [JobController::class, 'store']);
+    Route::post('/jobs/{id}/summarize', [JobController::class, 'summarize']);
+    Route::get('/jobs/{id}/summary', [JobController::class, 'summary']);
+});
