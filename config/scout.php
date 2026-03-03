@@ -140,9 +140,12 @@ return [
         'host' => env('MEILISEARCH_HOST', 'http://localhost:7700'),
         'key' => env('MEILISEARCH_KEY'),
         'index-settings' => [
-            // 'users' => [
-            //     'filterableAttributes'=> ['id', 'name', 'email'],
-            // ],
+            'jobs' => [
+                'searchableAttributes' => ['title', 'description', 'location', 'company'],
+                'filterableAttributes' => ['location', 'company'],
+                'sortableAttributes' => ['created_at'],
+                'rankingRules' => ['words','typo','proximity','attribute','sort','exactness'],
+            ],
         ],
     ],
 
@@ -221,3 +224,4 @@ return [
     ],
 
 ];
+

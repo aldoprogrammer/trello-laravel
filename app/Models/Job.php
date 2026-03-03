@@ -7,31 +7,27 @@ use Laravel\Scout\Searchable;
 
 class Job extends Model
 {
-    // protected $fillable = [
-    //     'title',
-    //     'location',
-    //     'description',
-    //     'company_id',
-    //     'summary',
-    // ];
     use Searchable;
 
     protected $fillable = ['title', 'description', 'location', 'summary'];
 
-    public function company() {
+    public function company()
+    {
         return $this->belongsTo(Company::class);
     }
 
     /**
-     * Tentukan data yang ingin di-index oleh Meilisearch
+     * Fields indexed by Scout / Meilisearch.
      */
     public function toSearchableArray(): array
     {
         return [
             'id' => (int) $this->id,
-            'title' => $this->title,
-            'location' => $this->location,
-            'company' => $this->company?->name,
+            'title' => (string) $this->title,
+            'description' => (string) $this->description,
+            'location' => (string) $this->location,
+            'company' => (string) ($this->company?->name ?? ''),
+            'created_at' => optional($this->created_at)?->timestamp,
         ];
     }
 }
