@@ -4,6 +4,8 @@ info:
   version: 1.0.0
   description: API documentation for the Trello Lite backend (Laravel + Sanctum)
 servers:
+  - url: https://laravel-trello.duckdns.org
+    description: Production Server
   - url: http://localhost:8000
     description: Local environment
 tags:
