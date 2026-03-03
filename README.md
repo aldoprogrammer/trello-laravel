@@ -1,6 +1,6 @@
 # Trello Lite Backend (Laravel)
 
-Backend legacy service untuk Trello Lite dengan Laravel + Sanctum, fokus pada autentikasi token dan CRUD Projects/Tasks milik user.
+Backend legacy service untuk Trello Lite dengan Laravel + Sanctum, fokus pada autentikasi token dan CRUD Projects/Tasks milik user / pengguna.
 
 ## Stack
 
