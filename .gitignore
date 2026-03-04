@@ -23,3 +23,7 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 .tmp-npm-cache
+.terraform/
+*.exe
+terraform.tfstate
+terraform.tfstate.backup

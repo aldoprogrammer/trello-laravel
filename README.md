@@ -1,181 +1,174 @@
-# Trello Lite Backend (Laravel)
+# Laravel Backend API (Current State)
 
-Backend legacy service untuk Trello Lite dengan Laravel + Sanctum, fokus pada autentikasi token dan CRUD Projects/Tasks milik user / pengguna.a
+Backend API built with Laravel 12 for two modules currently present in codebase:
+- Trello-style project/task management (Sanctum protected)
+- Job board search + AI summary endpoints (public, throttled)
 
-## Stack
+## Tech Stack
 
--   PHP 8.2+
--   Laravel 12.x
--   MySQL
--   Laravel Sanctum untuk token auth
+- PHP 8.2+
+- Laravel 12
+- MySQL 8
+- Laravel Sanctum (token auth)
+- Laravel Scout + Meilisearch (job search)
+- Redis/Cache support
+- Pest + PHPUnit for testing
+- Docker / Docker Compose
+- GitHub Actions CI/CD
+- Terraform (AWS EC2 + Security Group)
+- Kubernetes manifest (MySQL deployment/service)
 
-## Fitur
+## Implemented Features
 
--   Register, login, logout, me (Sanctum bearer token)
--   Authorization per-user (policies Project & Task)
--   CRUD Projects
--   CRUD Tasks (title, description, status: pending|in_progress|done, optional due_date)
--   Strong validation (Form Requests)
--   Konsisten JSON response (success, message, data/errors)
--   Swagger spec di `docs/swagger.yaml`
+### 1) Auth + Trello-style API (Protected)
 
-## Persiapan
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET /api/auth/me` (auth:sanctum)
+- `POST /api/auth/logout` (auth:sanctum)
+- Project CRUD under `/api/projects`
+- Task CRUD under `/api/projects/{project}/tasks`
+- Task statuses endpoint: `GET /api/statuses`
+- Policy-based authorization for user-owned resources
+- Form Request validation + unified API error responses
 
-1. Salin env:
+### 2) Jobs API (Public + Rate Limited)
 
-```
-cp .env.example .env
-```
+All under `throttle:60,1`:
+- `GET /api/jobs` (supports `search`, `location`, `per_page`)
+- `POST /api/jobs`
+- `POST /api/jobs/{id}/summarize`
+- `GET /api/jobs/{id}/summary`
 
-2. Sesuaikan kredensial MySQL di `.env`:
+Details:
+- Search uses Scout (`Job::search`) and Meilisearch driver in normal env.
+- Summary generation uses queued `SummarizeJob` with retry/backoff.
+- AI abstraction via `AIServiceInterface` bound to `GeminiService`.
+- Summary is cached (`job_summary_{id}`, TTL 1 hour).
 
-```
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=trello_lite
-DB_USERNAME=trello_user
-DB_PASSWORD=trello_password
-```
+### 3) Security + Middleware
 
-3. Install dependencies:
+Global custom middleware:
+- `X-Frame-Options: DENY`
+- `X-Content-Type-Options: nosniff`
+- `X-XSS-Protection: 1; mode=block`
 
-```
+Configured in `bootstrap/app.php`.
+
+## Local Setup
+
+1. Install dependencies
+
+```bash
 composer install
 ```
 
-4. Generate key:
+2. Copy env and configure
 
+```bash
+cp .env.example .env
 ```
+
+Set at minimum:
+
+```env
+APP_NAME=TrelloLite
+APP_ENV=local
+APP_KEY=
+APP_DEBUG=true
+APP_URL=http://localhost
+
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=trello_test_aldo
+DB_USERNAME=root
+DB_PASSWORD=
+
+SCOUT_DRIVER=meilisearch
+MEILISEARCH_HOST=http://127.0.0.1:7700
+MEILISEARCH_KEY=masterKey
+
+GEMINI_API_KEY=
+```
+
+3. App key + migrate
+
+```bash
 php artisan key:generate
-```
-
-5. Migrasi database:
-
-```
 php artisan migrate
 ```
 
-## Menjalankan
+4. Run app
 
-```
+```bash
 php artisan serve
 ```
 
-API base URL: `http://localhost:8000`
+## Docker Compose
 
-Auth flow:
+Available services in `docker-compose.yml`:
+- `app` (Laravel/PHP-FPM)
+- `db` (MySQL 8)
+- `meilisearch`
 
--   `POST /api/auth/register` -> ambil `token`
--   `POST /api/auth/login` -> ambil `token`
--   Sertakan header: `Authorization: Bearer {token}`
+Run:
 
-Endpoints utama:
-
--   Projects: `GET/POST /api/projects`, `GET/PUT/DELETE /api/projects/{project}`
--   Tasks: `GET/POST /api/projects/{project}/tasks`, `GET/PUT/DELETE /api/projects/{project}/tasks/{task}`
-
-## Dokumentasi API
-
-File Swagger: `docs/swagger.yaml`
-Import ke Swagger UI/Postman untuk eksplorasi skema request/response dan error (401/403/404/422).
-npx --yes @redocly/cli bundle docs/openapi.yaml -o docs/swagger.yaml
-
-## Dummy Payloads (contoh)
-
--   Register: `POST /api/auth/register`
-
-```json
-{
-    "name": "Aldo Lata Soba",
-    "email": "aldo@example.com",
-    "password": "@Aldo1234",
-    "password_confirmation": "@Aldo1234"
-}
-```
-
--   Login: `POST /api/auth/login`
-
-```json
-{
-    "email": "aldo@example.com",
-    "password": "@Aldo1234"
-}
-```
-
--   Create Project: `POST /api/projects`
-
-```json
-{
-    "name": "Sprint Board",
-    "description": "Tasks for sprint 1"
-}
-```
-
--   Update Project: `PUT /api/projects/{project}`
-
-```json
-{
-    "name": "Sprint Board v2",
-    "description": "Updated description"
-}
-```
-
--   Create Task: `POST /api/projects/{project}/tasks`
-
-```json
-{
-    "title": "Write landing copy",
-    "description": "Hero, value props, CTA",
-    "status": "pending",
-    "due_date": "2025-12-31"
-}
-```
-
--   Update Task: `PUT /api/projects/{project}/tasks/{task}`
-
-```json
-{
-    "title": "Write landing copy v2",
-    "description": "Refine hero text",
-    "status": "in_progress",
-    "due_date": "2026-01-05"
-}
-```
--   List Task Statuses: `GET /api/statuses`
-    -   Headers: `Authorization: Bearer {token}`
-
-```json
-{
-    "success": true,
-    "message": "Task statuses",
-    "data": [
-        { "value": "pending", "label": "Pending" },
-        { "value": "in_progress", "label": "In progress" },
-        { "value": "done", "label": "Done" }
-    ]
-}
-```
-
--   Authorization header (semua endpoint terproteksi):
-
-```
-Authorization: Bearer {token}
+```bash
+docker compose up -d --build
 ```
 
 ## Testing
 
--   Jalankan seluruh test:
+Run all tests:
 
+```bash
+./vendor/bin/pest
 ```
-php artisan test
-```
 
-## Struktur Singkat
+Current test coverage includes:
+- Feature: `JobSearchTest`, `SecurityTest`
+- Unit: `JobServiceTest`
 
--   `app/Models` (User, Project, Task)
--   `app/Http/Controllers` (Auth, Project, Task)
--   `app/Http/Requests` (AuthRegister/Login, ProjectStore/Update, TaskStore/Update)
--   `app/Services` (AuthService, ProjectService, TaskService)
--   `app/Policies` (ProjectPolicy, TaskPolicy)
--   `routes/api.php`
--   `docs/swagger.yaml`
+Test environment notes:
+- `phpunit.xml` uses SQLite in-memory
+- `SCOUT_DRIVER=collection` in tests (prevents Meilisearch dependency)
+
+## API Docs
+
+- OpenAPI file: `docs/swagger.yaml`
+- Web route for docs UI page: `/docs`
+- Swagger file route: `/docs/swagger.yaml`
+
+## CI/CD
+
+GitHub Actions workflow: `.github/workflows/deploy.yml`
+
+- `test` job (on push/PR to `main`)
+  - Uses MySQL service
+  - Runs migration + test suite
+- `deploy` job (push to `main` only)
+  - Runs on self-hosted Linux runner
+  - Pulls latest main
+  - `composer install --no-dev`
+  - Migrates + caches config/routes/views
+
+## Infra Artifacts
+
+- Terraform: `terraform/main.tf`
+  - EC2 instance (`t2.micro`)
+  - Security group allowing inbound 80/tcp
+- Kubernetes: `k8s/mysql-deployment.yml`
+  - MySQL Deployment + Service
+
+## Project Structure (Key Parts)
+
+- `app/Http/Controllers` (Auth, Project, Task, Job)
+- `app/Http/Requests` (validation, including `StoreJobRequest`)
+- `app/Services` (`JobService`, `GeminiService`, others)
+- `app/Jobs/SummarizeJob.php`
+- `app/Http/Middleware/SecurityHeaders.php`
+- `routes/api.php`
+- `routes/web.php`
+- `tests/Feature`, `tests/Unit`
+- `docs/swagger.yaml`
