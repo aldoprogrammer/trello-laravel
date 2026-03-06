@@ -48,7 +48,7 @@ return [
             'url' => env('DB_URL'),
             // Tambahkan bagian Read & Write di sini
             'read' => [
-                'host' => [env('DB_SLAVE_HOST', 'mysql-slave')],
+                'host' => [env('DB_SLAVE_HOST', env('DB_HOST', '127.0.0.1'))],
             ],
             'write' => [
                 'host' => [env('DB_HOST', 'db')],

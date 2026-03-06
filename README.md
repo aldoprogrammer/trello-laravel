@@ -317,6 +317,7 @@ This project uses Laravel read/write splitting on the `mysql` connection:
 - write host: `DB_HOST=db` (master)
 - read host: `DB_SLAVE_HOST=mysql-slave` (slave)
 - `sticky=true` is enabled
+- non-Docker/CI fallback: set `DB_SLAVE_HOST=127.0.0.1` (or same as `DB_HOST`)
 
 Important:
 - `DB::connection()->getConfig('host')` is config fallback only.
