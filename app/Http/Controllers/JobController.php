@@ -43,13 +43,12 @@ class JobController extends Controller
             ]);
         }
 
-        SummarizeJob::dispatchSync($id);
-        $resolved = $this->jobService->getSummaryFromCacheOrDatabase($id);
+        SummarizeJob::dispatch($id);
 
         return response()->json([
-            'message' => 'Summary generated.',
-            'summary' => $resolved['summary'],
-        ]);
+            'message' => 'Summary generation has been queued.',
+            'summary' => null,
+        ], 202);
     }
 
     public function summary(int $id)

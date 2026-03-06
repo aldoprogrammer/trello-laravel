@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Job;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Cache;
 
 class JobService
@@ -12,23 +13,46 @@ class JobService
 
     public function listJobs(array $filters, int $perPage): LengthAwarePaginator
     {
+        $perPage = max(1, min($perPage, 100));
         $search = $filters['search'] ?? null;
 
         if ($search) {
             // Gunakan Laravel Scout untuk Fuzzy Search
             return Job::search($search)
-                ->query(fn ($query) => $query->with('company'))
+                ->query(function (Builder $query): void {
+                    $query->select([
+                        'id',
+                        'title',
+                        'description',
+                        'location',
+                        'company_id',
+                        'created_at',
+                        'updated_at',
+                    ])->with(['company:id,name']);
+                })
                 ->paginate($perPage)
                 ->withQueryString();
         }
 
         // Default query jika tidak ada search
         return Job::query()
+            ->select([
+                'id',
+                'title',
+                'description',
+                'location',
+                'company_id',
+                'created_at',
+                'updated_at',
+            ])
             ->latest()
+            ->when($filters['title'] ?? null, function (Builder $query, string $title): void {
+                $query->where('title', 'like', "%{$title}%");
+            })
             ->when($filters['location'] ?? null, function ($query, $location) {
                 $query->where('location', 'like', "%{$location}%");
             })
-            ->with('company')
+            ->with(['company:id,name'])
             ->paginate($perPage)
             ->withQueryString();
     }

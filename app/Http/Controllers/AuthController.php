@@ -31,7 +31,15 @@ class AuthController extends Controller
 
     public function me(Request $request): JsonResponse
     {
-        return ApiResponse::success($request->user(), 'Authenticated user');
+        $user = $request->user();
+
+        return ApiResponse::success([
+            'id' => $user?->id,
+            'name' => $user?->name,
+            'email' => $user?->email,
+            'created_at' => $user?->created_at,
+            'updated_at' => $user?->updated_at,
+        ], 'Authenticated user');
     }
 
     public function logout(Request $request): JsonResponse

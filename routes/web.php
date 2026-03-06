@@ -8,7 +8,11 @@ Route::get('/', function () {
 });
 
 Route::get('/docs', function () {
-    return view('swagger');
+    return redirect()->away(rtrim(config('app.url'), '/').'/api/docs');
+});
+
+Route::get('/api/documentation', function () {
+    return redirect()->away(rtrim(config('app.url'), '/').'/api/docs');
 });
 
 Route::get('/docs/swagger.yaml', function () {

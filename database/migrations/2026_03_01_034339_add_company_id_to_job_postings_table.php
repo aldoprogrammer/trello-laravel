@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('jobs', function (Blueprint $table) {
+        Schema::table('job_postings', function (Blueprint $table) {
             $table->foreignId('company_id')->nullable()->constrained()->onDelete('cascade');
             // add indeexing
             $table->index('company_id');

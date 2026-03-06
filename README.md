@@ -55,6 +55,197 @@ Global custom middleware:
 
 Configured in `bootstrap/app.php`.
 
+## Dummy Endpoint Examples (All APIs)
+
+Base URL:
+
+```bash
+http://127.0.0.1:8000
+```
+
+Set token after login/register:
+
+```bash
+TOKEN="paste_your_bearer_token_here"
+```
+
+### Auth
+
+`POST /api/auth/register`
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name":"Aldo",
+    "email":"aldo@example.com",
+    "password":"Password123!",
+    "password_confirmation":"Password123!"
+  }'
+```
+
+`POST /api/auth/login`
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email":"aldo@example.com",
+    "password":"Password123!"
+  }'
+```
+
+`GET /api/auth/me`
+
+```bash
+curl http://127.0.0.1:8000/api/auth/me \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+`POST /api/auth/logout`
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/auth/logout \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Projects
+
+`GET /api/projects`
+
+```bash
+curl http://127.0.0.1:8000/api/projects \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+`POST /api/projects`
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/projects \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name":"Sprint Board",
+    "description":"Tasks for sprint 1"
+  }'
+```
+
+`GET /api/projects/{project}`
+
+```bash
+curl http://127.0.0.1:8000/api/projects/1 \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+`PUT /api/projects/{project}`
+
+```bash
+curl -X PUT http://127.0.0.1:8000/api/projects/1 \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name":"Sprint Board v2",
+    "description":"Updated sprint board"
+  }'
+```
+
+`DELETE /api/projects/{project}`
+
+```bash
+curl -X DELETE http://127.0.0.1:8000/api/projects/1 \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Tasks
+
+`GET /api/statuses`
+
+```bash
+curl http://127.0.0.1:8000/api/statuses \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+`GET /api/projects/{project}/tasks`
+
+```bash
+curl http://127.0.0.1:8000/api/projects/1/tasks \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+`POST /api/projects/{project}/tasks`
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/projects/1/tasks \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title":"Build login page",
+    "description":"Implement login UI + validation",
+    "status":"pending",
+    "due_date":"2026-03-10"
+  }'
+```
+
+`GET /api/projects/{project}/tasks/{task}`
+
+```bash
+curl http://127.0.0.1:8000/api/projects/1/tasks/1 \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+`PUT /api/projects/{project}/tasks/{task}`
+
+```bash
+curl -X PUT http://127.0.0.1:8000/api/projects/1/tasks/1 \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title":"Build login page",
+    "description":"Done backend integration",
+    "status":"in_progress"
+  }'
+```
+
+`DELETE /api/projects/{project}/tasks/{task}`
+
+```bash
+curl -X DELETE http://127.0.0.1:8000/api/projects/1/tasks/1 \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Jobs (Public, Throttled)
+
+`GET /api/jobs`
+
+```bash
+curl "http://127.0.0.1:8000/api/jobs?search=laravel&location=remote&per_page=10"
+```
+
+`POST /api/jobs`
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/jobs \
+  -H "Content-Type: application/json" \
+  -d '{
+    "title":"Laravel Developer",
+    "location":"Remote",
+    "description":"Build and maintain Laravel APIs",
+    "company_id":1
+  }'
+```
+
+`POST /api/jobs/{id}/summarize`
+
+```bash
+curl -X POST http://127.0.0.1:8000/api/jobs/1/summarize
+```
+
+`GET /api/jobs/{id}/summary`
+
+```bash
+curl http://127.0.0.1:8000/api/jobs/1/summary
+```
+
 ## Local Setup
 
 1. Install dependencies
@@ -110,13 +301,77 @@ php artisan serve
 Available services in `docker-compose.yml`:
 - `app` (Laravel/PHP-FPM)
 - `db` (MySQL 8)
+- `mysql-slave` (MySQL 8 read replica target, manual sync)
 - `meilisearch`
+- `redis`
 
 Run:
 
 ```bash
 docker compose up -d --build
 ```
+
+## MySQL Master/Slave (Read/Write Split)
+
+This project uses Laravel read/write splitting on the `mysql` connection:
+- write host: `DB_HOST=db` (master)
+- read host: `DB_SLAVE_HOST=mysql-slave` (slave)
+- `sticky=true` is enabled
+
+Important:
+- `DB::connection()->getConfig('host')` is config fallback only.
+- To verify real active server, query `@@hostname` from write/read PDO.
+
+### Persistent MySQL Data on Windows (D: drive)
+
+Compose mounts:
+- `D:/docker-data/laravel-be/mysql-master:/var/lib/mysql`
+- `D:/docker-data/laravel-be/mysql-slave:/var/lib/mysql`
+
+Create folders once:
+
+```powershell
+mkdir D:\docker-data\laravel-be\mysql-master
+mkdir D:\docker-data\laravel-be\mysql-slave
+```
+
+### Manual Verification (Real Host Check)
+
+1. Check container hostnames in PowerShell:
+
+```powershell
+docker inspect -f "{{.Config.Hostname}}" laravel-db
+docker inspect -f "{{.Config.Hostname}}" laravel-db-slave
+```
+
+2. Open tinker inside Docker app container:
+
+```powershell
+docker-compose exec app php artisan tinker
+```
+
+3. In Tinker, check write and read hosts:
+
+```php
+DB::connection('mysql')->getPdo()->query("select @@hostname")->fetchColumn();      // write PDO (master)
+DB::connection('mysql')->getReadPdo()->query("select @@hostname")->fetchColumn();  // read PDO (slave)
+```
+
+If the returned hostname matches:
+- `laravel-db` hostname => master
+- `laravel-db-slave` hostname => slave
+
+### Manual Master -> Slave Sync (No Binlog Replication)
+
+Since replication is not configured, run manual sync after schema/data changes:
+
+```powershell
+.\scripts\sync-master-to-slave.ps1
+```
+
+Typical flow:
+1. `docker-compose exec app php artisan migrate` (master only)
+2. `.\scripts\sync-master-to-slave.ps1`
 
 ## Testing
 

@@ -6,6 +6,8 @@ use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use App\Models\Task;
+use App\Observers\TaskObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -32,6 +34,7 @@ class AppServiceProvider extends ServiceProvider
             // Batasi 5 request per menit untuk menjaga kestabilan API
             return Limit::perMinute(5)->by('gemini-ai-key');
         });
+        Task::observe(TaskObserver::class);
     }
 
 

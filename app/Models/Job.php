@@ -9,6 +9,8 @@ class Job extends Model
 {
     use Searchable;
 
+    protected $table = 'job_postings';
+
     protected $fillable = ['title', 'description', 'location', 'summary'];
 
     public function company()

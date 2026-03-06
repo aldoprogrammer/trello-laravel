@@ -1,8 +1,32 @@
+# 1. SECRET: Mengamankan Password (Security)
+apiVersion: v1
+kind: Secret
+metadata:
+  name: mysql-secret
+type: Opaque
+data:
+  # Base64 dari "root"
+  password: cm9vdA==
+---
+# 2. PVC: Penyimpanan Permanen agar Data Tidak Hilang (Persistence)
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mysql-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+# 3. DEPLOYMENT: Manajemen Pod (Orchestration)
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: laravel-db
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app: mysql
@@ -14,12 +38,45 @@ spec:
       containers:
       - name: mysql
         image: mysql:8.0
+        # Mengambil password dari Secret
         env:
         - name: MYSQL_ROOT_PASSWORD
-          value: "root"
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: password
         ports:
         - containerPort: 3306
+        # Resource Limits: Mencegah kebocoran RAM/CPU (Scalability)
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1"
+        # Health Checks: Self-healing (Reliability)
+        livenessProbe:
+          tcpSocket:
+            port: 3306
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command: ["mysqladmin", "ping", "-h", "localhost"]
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        # Menghubungkan Storage ke dalam Kontainer
+        volumeMounts:
+        - name: mysql-data
+          mountPath: /var/lib/mysql
+      # Definisi Volume
+      volumes:
+      - name: mysql-data
+        persistentVolumeClaim:
+          claimName: mysql-pvc
 ---
+# 4. SERVICE: Networking Internal agar Laravel bisa akses Database
 apiVersion: v1
 kind: Service
 metadata:
@@ -29,3 +86,4 @@ spec:
     app: mysql
   ports:
   - port: 3306
+    targetPort: 3306
