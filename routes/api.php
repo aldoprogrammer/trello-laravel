@@ -16,27 +16,37 @@ Route::prefix('auth')->group(function () {
     });
 });
 
-Route::middleware('auth:sanctum')->group(function () {
-    Route::get('statuses', [TaskController::class, 'statuses']);
-
+Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
+    // Project Routes
     Route::get('projects', [ProjectController::class, 'index']);
     Route::post('projects', [ProjectController::class, 'store']);
     Route::get('projects/{project}', [ProjectController::class, 'show']);
     Route::put('projects/{project}', [ProjectController::class, 'update']);
     Route::delete('projects/{project}', [ProjectController::class, 'destroy']);
 
+    // Bulk Task Route (Pindahkan ke sini)
+    Route::post('projects/{project}/tasks/bulk', [ProjectController::class, 'bulkStoreTasks']);
+
+    // Task Routes
     Route::get('projects/{project}/tasks', [TaskController::class, 'index']);
     Route::post('projects/{project}/tasks', [TaskController::class, 'store']);
     Route::get('projects/{project}/tasks/{task}', [TaskController::class, 'show']);
     Route::put('projects/{project}/tasks/{task}', [TaskController::class, 'update']);
     Route::delete('projects/{project}/tasks/{task}', [TaskController::class, 'destroy']);
-});
 
+    Route::get('statuses', [TaskController::class, 'statuses']);
 
-// Update bagian bawah api.php lu:
-Route::middleware('throttle:60,1')->group(function () {
+    // Job Routes
     Route::get('/jobs', [JobController::class, 'index']);
     Route::post('/jobs', [JobController::class, 'store']);
     Route::post('/jobs/{id}/summarize', [JobController::class, 'summarize']);
     Route::get('/jobs/{id}/summary', [JobController::class, 'summary']);
 });
+
+Route::get('/test-job', function () {
+    $project = \App\Models\Project::first();
+    \App\Jobs\UpdateProjectProgress::dispatch($project);
+    return "Job dikirim!";
+});
+
+Route::post('/tasks/bulk', [TaskController::class, 'bulkStore']);

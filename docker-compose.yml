@@ -1,4 +1,16 @@
 services:
+  nginx-gateway:
+    image: nginx:alpine
+    container_name: nginx-gateway
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "8080:80"
+    depends_on:
+      - app
+    networks:    # <--- TAMBAHKAN INI
+      - backend  # <--- SUPAYA SATU JALUR DENGAN APP
+
   app:
     build:
       context: .
@@ -9,6 +21,8 @@ services:
       - .:/var/www
     networks:
       - backend
+    # TAMBAHKAN BARIS INI:
+    command: php artisan serve --host=0.0.0.0 --port=8000
 
   db:
     image: mysql:8.0
@@ -19,6 +33,32 @@ services:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_PASSWORD: root
       MYSQL_USER: aldo
+    volumes:
+      - "D:/docker-data/laravel-be/mysql-master:/var/lib/mysql"
+    networks:
+      - backend
+
+  mysql-slave:
+    image: mysql:8.0
+    container_name: laravel-db-slave
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: trello_test_aldo
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_PASSWORD: root
+      MYSQL_USER: aldo
+    command: ["mysqld", "--server-id=2", "--log-bin=mysql-bin", "--read-only=1"]
+    volumes:
+      - "D:/docker-data/laravel-be/mysql-slave:/var/lib/mysql"
+    networks:
+      - backend
+
+  redis:
+    image: redis:alpine
+    container_name: laravel-redis
+    restart: unless-stopped
+    ports:
+      - "6380:6379"
     networks:
       - backend
 

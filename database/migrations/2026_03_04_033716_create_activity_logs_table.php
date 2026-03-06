@@ -11,11 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('jobs', function (Blueprint $table) {
+        Schema::create('activity_logs', function (Blueprint $table) {
             $table->id();
-            $table->string('title');
-            $table->string('location');
-            $table->text('description');
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->nullableMorphs('subject'); // Membuat subject_id & subject_type
+            $table->string('description');
+            $table->json('properties')->nullable(); // Menyimpan data 'old' vs 'new'
             $table->timestamps();
         });
     }
@@ -25,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('jobs');
+        Schema::dropIfExists('activity_logs');
     }
 };

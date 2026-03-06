@@ -4,7 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 use Illuminate\Auth\AuthenticationException;
-use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 
 class AuthService
 {
@@ -26,12 +26,16 @@ class AuthService
 
     public function login(array $credentials): array
     {
-        if (! Auth::attempt($credentials)) {
+        /** @var User|null $user */
+        $user = User::query()
+            ->select(['id', 'name', 'email', 'password', 'created_at', 'updated_at'])
+            ->where('email', $credentials['email'])
+            ->first();
+
+        if (! $user || ! Hash::check($credentials['password'], $user->password)) {
             throw new AuthenticationException('Invalid credentials.');
         }
 
-        /** @var User $user */
-        $user = Auth::user();
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return [

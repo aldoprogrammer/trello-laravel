@@ -5,25 +5,39 @@ namespace App\Http\Controllers;
 use App\Helpers\ApiResponse;
 use App\Http\Requests\ProjectStoreRequest;
 use App\Http\Requests\ProjectUpdateRequest;
+use App\Http\Requests\Tasks\BulkStoreTaskRequest;
 use App\Models\Project;
 use App\Services\ProjectService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class ProjectController extends Controller
 {
-    public function __construct(private readonly ProjectService $projectService)
+    public function __construct(private readonly ProjectService $projectService) {}
+
+
+
+    public function index(Request $request)
     {
-    }
+        $search = trim((string) $request->input('search', ''));
+        $perPage = max(1, min((int) $request->input('per_page', 15), 100));
+        $user = $request->user();
 
-    public function index(Request $request): JsonResponse
-    {
-        $perPage = min((int) $request->query('per_page', 15), 100);
-        $projects = $this->projectService->listForUser($request->user(), $perPage);
+        // Default listing: database query scoped to authenticated user.
+        if ($search === '') {
+            $projects = $this->projectService->listForUser($user, $perPage);
 
-        $message = $projects->isEmpty() ? 'No projects found' : 'Projects fetched';
+            return response()->json($projects);
+        }
 
-        return ApiResponse::success($projects, $message);
+        // Search listing: use Scout, but still scope results to current user.
+        $projects = Project::search($search)
+            ->query(fn ($query) => $query->where('user_id', $user->id))
+            ->paginate($perPage)
+            ->withQueryString();
+
+        return response()->json($projects);
     }
 
     public function store(ProjectStoreRequest $request): JsonResponse
@@ -57,16 +71,27 @@ class ProjectController extends Controller
         return ApiResponse::success($project, 'Project updated');
     }
 
-    public function destroy(Project $project): JsonResponse
+    public function destroy(Project $project)
     {
+        // Cek akses user (Policy)
         $this->authorize('delete', $project);
 
-        if ($project->user_id !== request()->user()->id) {
-            return ApiResponse::error('Project not found', 404);
-        }
+        // Mulai transaksi
+        DB::transaction(function () use ($project) {
+            // 1. Hapus semua tasks terkait dulu
+            $project->tasks()->delete();
 
-        $this->projectService->delete($project);
+            // 2. Hapus project-nya
+            $project->delete();
+        });
 
-        return ApiResponse::success(null, 'Project deleted');
+        return response()->json(['message' => 'Project and its tasks deleted successfully.']);
+    }
+    public function bulkStoreTasks(BulkStoreTaskRequest $request, Project $project): JsonResponse
+    {
+        // Authorization is now handled inside the BulkStoreTaskRequest
+        $this->projectService->bulkCreateTasks($project, $request->validated()['tasks']);
+
+        return ApiResponse::success(null, 'Bulk tasks created successfully');
     }
 }

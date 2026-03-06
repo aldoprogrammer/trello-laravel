@@ -19,6 +19,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->throttleApi(); // Bawaan Laravel 11 buat throttling
+        $middleware->trustProxies(at: env('TRUSTED_PROXIES', '*'));
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class); // Middleware buatan lu
     })
     ->withExceptions(function (Exceptions $exceptions): void {

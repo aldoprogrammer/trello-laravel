@@ -23,3 +23,14 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 .tmp-npm-cache
+.terraform/
+*.exe
+terraform.tfstate
+terraform.tfstate.backup
+
+# Local database runtime files (do not commit)
+docker/mysql/
+*.ibd
+ib*
+undo_*
+tmp-master-dump.sql

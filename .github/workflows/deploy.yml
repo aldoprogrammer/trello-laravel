@@ -19,6 +19,14 @@ jobs:
           - 3306:3306
         options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
+      # Added Meilisearch so your app doesn't crash during tests
+      meilisearch:
+        image: getmeili/meilisearch:latest
+        env:
+          MEILI_MASTER_KEY: masterKey
+        ports:
+          - 7700:7700
+
     steps:
       - uses: actions/checkout@v4
 
@@ -31,14 +39,21 @@ jobs:
       - name: Install Dependencies
         run: composer install --prefer-dist --no-progress
 
+      # POINT PLUS: Security Audit (Checks for vulnerable packages)
+      - name: Security Audit
+        run: composer audit
+
       - name: Run Tests
         env:
           DB_CONNECTION: mysql
           DB_HOST: 127.0.0.1
+          DB_SLAVE_HOST: 127.0.0.1
           DB_PORT: 3306
           DB_DATABASE: testing
           DB_USERNAME: root
           DB_PASSWORD: root
+          MEILISEARCH_HOST: http://127.0.0.1:7700
+          MEILISEARCH_KEY: masterKey
         run: |
           cp .env.example .env
           php artisan key:generate
