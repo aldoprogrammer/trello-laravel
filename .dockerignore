@@ -1,0 +1,7 @@
+**/*.sock
+docker/mysql/**
+mysql-data/**
+mysql-slave/**
+vendor/**
+node_modules/**
+.git/**

@@ -6,6 +6,8 @@ use App\Models\Job;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Redis; // <-- Tambahkan ini
+use Illuminate\Support\Str; // <-- Tambahkan ini
 
 class JobService
 {
@@ -59,7 +61,25 @@ class JobService
 
     public function createJob(array $data): Job
     {
-        return Job::create($data);
+        // 1. Simpan ke Database (Master)
+        $job = Job::create($data);
+        // 2. EVENT-DRIVEN LOGIC (Task 4)
+        // Kita buat "Idempotency Key" unik untuk job ini
+        $idempotencyKey = 'job_created_' . $job->id . '_' . Str::random(5);
+
+        $payload = [
+            'job_id' => $job->id,
+            'title' => $job->title,
+            'company' => $job->company->name ?? 'Unknown Company',
+            'idempotency_key' => $idempotencyKey, // Senior Touch!
+            'timestamp' => now()->toIso8601String(),
+        ];
+
+        // 3. Publish ke Redis Channel 'job-notifications'
+        // Ini adalah "Service A" yang mengirim pesan
+        Redis::publish('job-notifications', json_encode($payload));
+
+        return $job;
     }
 
     public function getSummaryFromCacheOrDatabase(int $id): array
