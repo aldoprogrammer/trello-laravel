@@ -63,18 +63,17 @@ jobs:
   deploy:
     needs: test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: [self-hosted, Linux, X64]
+    runs-on: ubuntu-latest  # Ini akan mencari runner yang lo install di AWS
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Deploy Scripts
+      - name: Deploy to Server
         run: |
-          cd /var/www/laravel
-          git reset --hard
+          cd ~/trello-laravel
           git pull origin main
-          composer install --no-dev --optimize-autoloader
-          php artisan migrate --force
-          php artisan config:cache
-          php artisan route:cache
-          php artisan view:cache
+          # Kita eksekusi perintah di dalam container biar nggak ngerusak host
+          sudo docker exec laravel-app composer install --no-dev --optimize-autoloader
+          sudo docker exec laravel-app php artisan migrate --force
+          sudo docker exec laravel-app php artisan config:cache
+          sudo docker exec laravel-app php artisan route:cache
+          sudo docker exec laravel-app php artisan view:cache
+          # Restart worker biar baca kode baru
+          sudo docker-compose restart worker
