@@ -805,16 +805,27 @@ components:
         - name
         - email
         - password
+        - password_confirmation
       properties:
         name:
           type: string
+          maxLength: 255
+          example: Aldo
         email:
           type: string
           format: email
+          maxLength: 255
+          example: aldo@example.com
         password:
           type: string
           format: password
           minLength: 8
+          example: Password123!
+        password_confirmation:
+          type: string
+          format: password
+          minLength: 8
+          example: Password123!
     AuthLoginRequest:
       type: object
       required:
