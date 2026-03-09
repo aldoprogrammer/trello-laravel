@@ -20,7 +20,7 @@ services:
     working_dir: /var/www
     volumes:
       - .:/var/www
-      - /var/www/vendor
+      # - /var/www/vendor
     depends_on:
       - db
       - redis
@@ -32,12 +32,14 @@ services:
   worker:
     build: .
     container_name: laravel-worker
+    # TAMBAHKAN/UBAH BARIS INI:
+    command: php artisan queue:work --verbose --tries=3 --timeout=90
     # command: php artisan RedisNotificationWorker  <-- COMMENT/HAPUS DULU BARIS INI
     tty: true  # <-- TAMBAHKAN INI biar container tetep hidup meskipun gak ada command
     restart: always
     volumes:
       - .:/var/www
-      - /var/www/vendor
+      # - /var/www/vendor
     depends_on:
       - redis
       - db
@@ -48,6 +50,8 @@ services:
     image: mysql:8.0
     container_name: laravel-db
     restart: unless-stopped
+    # TAMBAHKAN COMMAND INI:
+    command: ["mysqld", "--server-id=1", "--log-bin=mysql-bin"]
     environment:
       MYSQL_DATABASE: trello_test_aldo
       MYSQL_ROOT_PASSWORD: root
