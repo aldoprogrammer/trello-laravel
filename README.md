@@ -409,10 +409,26 @@ GitHub Actions workflow: `.github/workflows/deploy.yml`
   - `composer install --no-dev`
   - Migrates + caches config/routes/views
 
+## Terraform Usage
+
+To keep this README concise, Terraform commands are documented in:
+
+- [`terraform/TERRAFORM.md`](terraform/TERRAFORM.md)
+
+Quick start:
+
+```powershell
+cd terraform
+terraform init
+terraform plan
+terraform apply
+terraform output
+```
+
 ## Infra Artifacts
 
 - Terraform: `terraform/main.tf`
-  - EC2 instance (`t2.micro`)
+  - 2 EC2 instances (instance type from `terraform/variables.tf`)
   - Security group allowing inbound 80/tcp
 - Kubernetes: `k8s/mysql-deployment.yml`
   - MySQL Deployment + Service
