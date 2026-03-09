@@ -34,3 +34,7 @@ docker/mysql/
 ib*
 undo_*
 tmp-master-dump.sql
+/mysql-data/
+/mysql-slave/
+/meili-data/
+.DS_Store

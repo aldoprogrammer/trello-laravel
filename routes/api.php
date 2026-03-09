@@ -5,6 +5,34 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\JobController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redis;
+
+Route::get('/health', function () {
+    try {
+        // 1. Cek Database
+        DB::connection()->getPdo();
+
+        // 2. Cek Redis
+        Redis::connection()->ping();
+
+        return response()->json([
+            'status' => 'UP',
+            'services' => [
+                'database' => 'OK',
+                'redis' => 'OK',
+            ],
+            'timestamp' => now()->toIso8601String()
+        ], 200);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'DOWN',
+            'error' => 'One or more services are unavailable',
+            'message' => $e->getMessage(),
+        ], 500); // K8s butuh 500 buat restart pod!
+    }
+});
 
 Route::prefix('auth')->group(function () {
     Route::post('register', [AuthController::class, 'register']);
