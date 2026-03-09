@@ -63,17 +63,18 @@ jobs:
   deploy:
     needs: test
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest  # Ini akan mencari runner yang lo install di AWS
+    runs-on: ubuntu-latest
     steps:
-      - name: Deploy to Server
-        run: |
-          cd ~/trello-laravel
-          git pull origin main
-          # Kita eksekusi perintah di dalam container biar nggak ngerusak host
-          sudo docker exec laravel-app composer install --no-dev --optimize-autoloader
-          sudo docker exec laravel-app php artisan migrate --force
-          sudo docker exec laravel-app php artisan config:cache
-          sudo docker exec laravel-app php artisan route:cache
-          sudo docker exec laravel-app php artisan view:cache
-          # Restart worker biar baca kode baru
-          sudo docker-compose restart worker
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /home/ubuntu/trello-laravel
+            git pull origin main
+            sudo docker exec laravel-app composer install --no-dev --optimize-autoloader
+            sudo docker exec laravel-app php artisan migrate --force
+            sudo docker exec laravel-app php artisan config:cache
+            sudo docker-compose restart worker
