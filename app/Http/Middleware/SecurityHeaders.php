@@ -37,7 +37,7 @@ class SecurityHeaders
             // Swagger UI needs inline scripts/styles to render.
             $response->headers->set(
                 'Content-Security-Policy',
-                "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; object-src 'none';"
+                "default-src 'self'; script-src 'self' 'unsafe-inline' https://unpkg.com; style-src 'self' 'unsafe-inline' https://unpkg.com; img-src 'self' data:; font-src 'self' data:; connect-src 'self' https://unpkg.com; object-src 'none';"
             );
         } elseif ($isTelescopeRoute) {
             // Telescope uses inline module code and runtime evaluation.

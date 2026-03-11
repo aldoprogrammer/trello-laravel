@@ -7,16 +7,16 @@ register:
       content:
         application/json:
           schema:
-            $ref: '../openapi.yaml#/components/schemas/AuthRegisterRequest'
+            $ref: '../components.yaml#/components/schemas/AuthRegisterRequest'
     responses:
       '201':
         description: User registered
         content:
           application/json:
             schema:
-              $ref: '../openapi.yaml#/components/schemas/ApiResponseAuth'
+              $ref: '../components.yaml#/components/schemas/ApiResponseAuth'
       '422':
-        $ref: '../openapi.yaml#/components/responses/UnprocessableEntity'
+        $ref: '../components.yaml#/components/responses/UnprocessableEntity'
 
 login:
   post:
@@ -27,18 +27,18 @@ login:
       content:
         application/json:
           schema:
-            $ref: '../openapi.yaml#/components/schemas/AuthLoginRequest'
+            $ref: '../components.yaml#/components/schemas/AuthLoginRequest'
     responses:
       '200':
         description: Login success
         content:
           application/json:
             schema:
-              $ref: '../openapi.yaml#/components/schemas/ApiResponseAuth'
+              $ref: '../components.yaml#/components/schemas/ApiResponseAuth'
       '401':
-        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+        $ref: '../components.yaml#/components/responses/Unauthorized'
       '422':
-        $ref: '../openapi.yaml#/components/responses/UnprocessableEntity'
+        $ref: '../components.yaml#/components/responses/UnprocessableEntity'
 
 me:
   get:
@@ -52,9 +52,9 @@ me:
         content:
           application/json:
             schema:
-              $ref: '../openapi.yaml#/components/schemas/ApiResponseUser'
+              $ref: '../components.yaml#/components/schemas/ApiResponseUser'
       '401':
-        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+        $ref: '../components.yaml#/components/responses/Unauthorized'
 
 logout:
   post:
@@ -68,6 +68,6 @@ logout:
         content:
           application/json:
             schema:
-              $ref: '../openapi.yaml#/components/schemas/ApiResponseEmpty'
+              $ref: '../components.yaml#/components/schemas/ApiResponseEmpty'
       '401':
-        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+        $ref: '../components.yaml#/components/responses/Unauthorized'

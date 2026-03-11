@@ -7,6 +7,13 @@ Job:
     title:
       type: string
       example: Backend Engineer
+    company_id:
+      type: integer
+      example: 1
+    company_name:
+      type: string
+      nullable: true
+      example: Wonsulting
     location:
       type: string
       example: Jakarta
@@ -34,7 +41,11 @@ PaginatedJobs:
 
 JobRequest:
   type: object
-  required: [title, location, description]
+  required:
+    - title
+    - location
+    - description
+    - company_id
   properties:
     title:
       type: string
@@ -44,6 +55,9 @@ JobRequest:
       maxLength: 255
     description:
       type: string
+    company_id:
+      type: integer
+      example: 1
 
 JobResourceResponse:
   type: object

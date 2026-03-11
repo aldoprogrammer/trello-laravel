@@ -19,29 +19,22 @@ Task:
       example: Work with design to draft the hero section
     status:
       type: string
-      enum: [pending, in_progress, done]
+      enum:
+        - pending
+        - in_progress
+        - done
       example: pending
     due_date:
       type: string
       format: date
       nullable: true
-      example: 2025-12-31
+      example: '2025-12-31'
     created_at:
       type: string
       format: date-time
     updated_at:
       type: string
       format: date-time
-
-TaskStatus:
-  type: object
-  properties:
-    value:
-      type: string
-      enum: [pending, in_progress, done]
-    label:
-      type: string
-      example: Pending
 
 PaginatedTasks:
   type: object
@@ -83,7 +76,8 @@ ApiResponseTaskStatuses:
 
 TaskRequest:
   type: object
-  required: [title]
+  required:
+    - title
   properties:
     title:
       type: string
@@ -93,13 +87,16 @@ TaskRequest:
       nullable: true
     status:
       type: string
-      enum: [pending, in_progress, done]
+      enum:
+        - pending
+        - in_progress
+        - done
       example: pending
     due_date:
       type: string
       format: date
       nullable: true
-      example: 2025-12-31
+      example: '2025-12-31'
 
 TaskUpdateRequest:
   type: object
@@ -111,8 +108,24 @@ TaskUpdateRequest:
       nullable: true
     status:
       type: string
-      enum: [pending, in_progress, done]
+      enum:
+        - pending
+        - in_progress
+        - done
     due_date:
       type: string
       format: date
       nullable: true
+
+TaskStatus:
+  type: object
+  properties:
+    value:
+      type: string
+      enum:
+        - pending
+        - in_progress
+        - done
+    label:
+      type: string
+      example: Pending

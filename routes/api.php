@@ -4,6 +4,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\JobController;
+use App\Http\Controllers\CompanyController;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
@@ -63,6 +64,8 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->group(function () {
     Route::delete('projects/{project}/tasks/{task}', [TaskController::class, 'destroy']);
 
     Route::get('statuses', [TaskController::class, 'statuses']);
+
+    Route::apiResource('companies', CompanyController::class);
 
     // Job Routes
     Route::get('/jobs', [JobController::class, 'index']);

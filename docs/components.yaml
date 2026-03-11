@@ -1,0 +1,115 @@
+components:
+  securitySchemes:
+    bearerAuth:
+      $ref: './schemas/common.yaml#/securitySchemes/bearerAuth'
+  parameters:
+    ProjectId:
+      $ref: './schemas/common.yaml#/parameters/ProjectId'
+    TaskId:
+      $ref: './schemas/common.yaml#/parameters/TaskId'
+    JobId:
+      $ref: './schemas/common.yaml#/parameters/JobId'
+    CompanyId:
+      $ref: './schemas/common.yaml#/parameters/CompanyId'
+  responses:
+    Unauthorized:
+      description: Unauthorized
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/common.yaml#/ApiResponseError'
+    Forbidden:
+      description: Forbidden
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/common.yaml#/ApiResponseError'
+    NotFound:
+      description: Not found
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/common.yaml#/ApiResponseError'
+    UnprocessableEntity:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/common.yaml#/ApiResponseValidationError'
+  schemas:
+    ApiResponseBase:
+      $ref: './schemas/common.yaml#/ApiResponseBase'
+    ApiResponseEmpty:
+      $ref: './schemas/common.yaml#/ApiResponseEmpty'
+    ApiResponseError:
+      $ref: './schemas/common.yaml#/ApiResponseError'
+    ApiResponseValidationError:
+      $ref: './schemas/common.yaml#/ApiResponseValidationError'
+    PaginationLinks:
+      $ref: './schemas/common.yaml#/PaginationLinks'
+    PaginationMeta:
+      $ref: './schemas/common.yaml#/PaginationMeta'
+    User:
+      $ref: './schemas/auth.yaml#/User'
+    AuthPayload:
+      $ref: './schemas/auth.yaml#/AuthPayload'
+    ApiResponseAuth:
+      $ref: './schemas/auth.yaml#/ApiResponseAuth'
+    ApiResponseUser:
+      $ref: './schemas/auth.yaml#/ApiResponseUser'
+    AuthRegisterRequest:
+      $ref: './schemas/auth.yaml#/AuthRegisterRequest'
+    AuthLoginRequest:
+      $ref: './schemas/auth.yaml#/AuthLoginRequest'
+    Project:
+      $ref: './schemas/projects.yaml#/Project'
+    PaginatedProjects:
+      $ref: './schemas/projects.yaml#/PaginatedProjects'
+    ApiResponseProject:
+      $ref: './schemas/projects.yaml#/ApiResponseProject'
+    ApiResponseProjects:
+      $ref: './schemas/projects.yaml#/ApiResponseProjects'
+    ProjectRequest:
+      $ref: './schemas/projects.yaml#/ProjectRequest'
+    ProjectUpdateRequest:
+      $ref: './schemas/projects.yaml#/ProjectUpdateRequest'
+    Company:
+      $ref: './schemas/companies.yaml#/Company'
+    CompanyRequest:
+      $ref: './schemas/companies.yaml#/CompanyRequest'
+    CompanyStoreResponse:
+      $ref: './schemas/companies.yaml#/CompanyStoreResponse'
+    CompanyUpdateResponse:
+      $ref: './schemas/companies.yaml#/CompanyUpdateResponse'
+    CompanyDeleteResponse:
+      $ref: './schemas/companies.yaml#/CompanyDeleteResponse'
+    PaginatedCompanies:
+      $ref: './schemas/companies.yaml#/PaginatedCompanies'
+    CompanyCollectionResponse:
+      $ref: './schemas/companies.yaml#/CompanyCollectionResponse'
+    Task:
+      $ref: './schemas/tasks.yaml#/Task'
+    PaginatedTasks:
+      $ref: './schemas/tasks.yaml#/PaginatedTasks'
+    ApiResponseTask:
+      $ref: './schemas/tasks.yaml#/ApiResponseTask'
+    ApiResponseTasks:
+      $ref: './schemas/tasks.yaml#/ApiResponseTasks'
+    ApiResponseTaskStatuses:
+      $ref: './schemas/tasks.yaml#/ApiResponseTaskStatuses'
+    TaskRequest:
+      $ref: './schemas/tasks.yaml#/TaskRequest'
+    TaskUpdateRequest:
+      $ref: './schemas/tasks.yaml#/TaskUpdateRequest'
+    TaskStatus:
+      $ref: './schemas/tasks.yaml#/TaskStatus'
+    Job:
+      $ref: './schemas/jobs.yaml#/Job'
+    PaginatedJobs:
+      $ref: './schemas/jobs.yaml#/PaginatedJobs'
+    JobRequest:
+      $ref: './schemas/jobs.yaml#/JobRequest'
+    JobResourceResponse:
+      $ref: './schemas/jobs.yaml#/JobResourceResponse'
+    JobCollectionResponse:
+      $ref: './schemas/jobs.yaml#/JobCollectionResponse'

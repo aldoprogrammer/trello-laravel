@@ -1,3 +1,65 @@
+securitySchemes:
+  bearerAuth:
+    type: http
+    scheme: bearer
+    bearerFormat: JWT
+
+parameters:
+  ProjectId:
+    name: project
+    in: path
+    required: true
+    schema:
+      type: integer
+    description: ID of the project
+  TaskId:
+    name: task
+    in: path
+    required: true
+    schema:
+      type: integer
+    description: ID of the task
+  JobId:
+    name: id
+    in: path
+    required: true
+    schema:
+      type: integer
+    description: ID of the job
+  CompanyId:
+    name: company
+    in: path
+    required: true
+    schema:
+      type: integer
+    description: ID of the company
+
+responses:
+  Unauthorized:
+    description: Unauthorized
+    content:
+      application/json:
+        schema:
+          $ref: '#/ApiResponseError'
+  Forbidden:
+    description: Forbidden
+    content:
+      application/json:
+        schema:
+          $ref: '#/ApiResponseError'
+  NotFound:
+    description: Not found
+    content:
+      application/json:
+        schema:
+          $ref: '#/ApiResponseError'
+  UnprocessableEntity:
+    description: Validation error
+    content:
+      application/json:
+        schema:
+          $ref: '#/ApiResponseValidationError'
+
 ApiResponseBase:
   type: object
   properties:

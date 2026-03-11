@@ -43,7 +43,7 @@ jobs:
         content:
           application/json:
             schema:
-              $ref: '../openapi.yaml#/components/schemas/JobCollectionResponse'
+              $ref: '../components.yaml#/components/schemas/JobCollectionResponse'
   post:
     tags: [Jobs]
     summary: Create a new job
@@ -52,20 +52,20 @@ jobs:
       content:
         application/json:
           schema:
-            $ref: '../openapi.yaml#/components/schemas/JobRequest'
+            $ref: '../components.yaml#/components/schemas/JobRequest'
     responses:
       '201':
         description: Job created
         content:
           application/json:
             schema:
-              $ref: '../openapi.yaml#/components/schemas/JobResourceResponse'
+              $ref: '../components.yaml#/components/schemas/JobResourceResponse'
       '422':
-        $ref: '../openapi.yaml#/components/responses/UnprocessableEntity'
+        $ref: '../components.yaml#/components/responses/UnprocessableEntity'
 
 summarizeJob:
   parameters:
-    - $ref: '../openapi.yaml#/components/parameters/JobId'
+    - $ref: '../components.yaml#/components/parameters/JobId'
   post:
     tags: [Jobs]
     summary: Queue AI summary generation for a job
@@ -83,7 +83,7 @@ summarizeJob:
 
 jobSummary:
   parameters:
-    - $ref: '../openapi.yaml#/components/parameters/JobId'
+    - $ref: '../components.yaml#/components/parameters/JobId'
   get:
     tags: [Jobs]
     summary: Get cached summary result for a job
@@ -93,8 +93,7 @@ jobSummary:
         content:
           application/json:
             schema:
-              oneOf:
-                - type: string
-                - type: 'null'
+              type: string
+              nullable: true
       '404':
-        $ref: '../openapi.yaml#/components/responses/NotFound'
+        $ref: '../components.yaml#/components/responses/NotFound'
