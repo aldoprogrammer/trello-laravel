@@ -1,0 +1,43 @@
+health:
+  get:
+    tags: [System]
+    summary: Health check for API dependencies
+    description: Checks database and Redis availability.
+    responses:
+      '200':
+        description: All core services are healthy
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  example: UP
+                services:
+                  type: object
+                  properties:
+                    database:
+                      type: string
+                      example: OK
+                    redis:
+                      type: string
+                      example: OK
+                timestamp:
+                  type: string
+                  format: date-time
+      '500':
+        description: One or more services are unavailable
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  example: DOWN
+                error:
+                  type: string
+                  example: One or more services are unavailable
+                message:
+                  type: string
