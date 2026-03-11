@@ -163,9 +163,9 @@
             </div>
         </div>
 
-<div class="meta">
-    Base URL: <code>{{ config('app.url') }}</code> · Swagger UI: <code>/docs</code>
-</div>
+        <div class="meta">
+            Base URL: <code>{{ config('app.url') }}</code> · Swagger UI: <code>/api/docs</code>
+        </div>
 
     </div>
 </body>

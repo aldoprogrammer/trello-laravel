@@ -424,10 +424,10 @@ Quick start:
 
 ```powershell
 cd terraform
-terraform init
-terraform plan
-terraform apply
-terraform output
+.\terraform init
+.\terraform plan
+.\terraform apply
+.\terraform output
 ```
 
 ## Infra Artifacts
