@@ -18,6 +18,40 @@ Backend API built with Laravel 12 for two modules currently present in codebase:
 - Terraform (AWS EC2 + Security Group)
 - Kubernetes manifest (MySQL deployment/service)
 
+## 🌐 Enterprise Infrastructure (AWS Cloud)
+
+Project ini dideploy dengan arsitektur **High Availability** menggunakan AWS:
+
+- **Deployment Strategy:** Automated via GitHub Actions & AWS CodeDeploy (Zero Downtime Mindset).
+- **Environment Management:** Menggunakan **AWS SSM Parameter Store**. Rahasia `.env` tidak disimpan di server/repo, melainkan ditarik dinamis saat runtime.
+- **Master-Slave Replication:** Database MySQL menggunakan arsitektur Read/Write splitting (Master untuk Write, Slave untuk Read) untuk skalabilitas query.
+- **Reverse Proxy:** Nginx Docker Container sebagai gateway utama pada port 80.
+- **Self-Hosted Runner:** Deployment dilakukan menggunakan runner yang terkonfigurasi pada instance EC2 sendiri.
+
+graph TD
+    User((User/Client)) -->|Port 80| Nginx[Nginx Container]
+    
+    subgraph "EC2 Instances (Multi-AZ)"
+        Nginx -->|Proxy Pass| App[Laravel App Container]
+        App -->|Fetch at Runtime| SSM[AWS SSM Parameter Store]
+        App -->|Jobs/Cache| Redis[(Redis Container)]
+        App -->|Search Index| Meili[(Meilisearch Container)]
+    end
+
+    subgraph "Database Layer (AWS RDS)"
+        App -->|Write Ops| Master[(MySQL Master)]
+        App -->|Read Ops| Slave[(MySQL Slave)]
+        Master -.->|Replication| Slave
+    end
+
+    subgraph "CI/CD Pipeline"
+        GH[GitHub Repo] -->|Push| GHA[GitHub Actions]
+        GHA -->|Trigger| CD[AWS CodeDeploy]
+        CD -->|Execute| Script[restart_server.sh]
+        Script -->|Inject| SSM
+    end
+
+
 ## Implemented Features
 
 ### 1) Auth + Trello-style API (Protected)
@@ -413,6 +447,17 @@ GitHub Actions workflow: `.github/workflows/deploy.yml`
   - Pulls latest main
   - `composer install --no-dev`
   - Migrates + caches config/routes/views
+
+## 🛠️ DevOps Operations
+
+### Automated Deployment Flow
+Setiap kali melakukan `git push`, script `scripts/restart_server.sh` akan mengeksekusi:
+1. **Dynamic Secrets Retrieval:** Mengambil variabel environment dari AWS SSM.
+2. **Container Orchestration:** Melakukan rebuild & restart container secara otomatis.
+3. **Automated Post-Deployment:** - Autoload optimization via Composer.
+   - Dynamic `APP_KEY` generation.
+   - Cache clearing & configuration caching.
+   - Automated Database Migration pada Master DB.
 
 ## Terraform Usage
 
