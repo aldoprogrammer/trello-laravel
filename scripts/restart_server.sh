@@ -1,32 +1,33 @@
 #!/bin/bash
 cd /home/ubuntu/trello-laravel
 
-# 1. Pastikan Nginx host mati
+# Matikan sisa nginx host
 sudo systemctl stop nginx || true
 
-# 2. Setup .env dari example (Ini wajib biar struktur DB_HOST=db ke-load)
-if [ -f .env.example ]; then
-    cp .env.example .env
-else
-    touch .env
-fi
+# Ambil ENV dari SSM
+echo "Pulling environment from AWS SSM..."
+/usr/local/bin/aws ssm get-parameter --name "/trello/prod/env_file" --with-decryption --query "Parameter.Value" --output text --region us-east-1 > .env
 
-# 3. Restart Docker
+# Ownership fix agar Docker lancar baca file
+sudo chown ubuntu:ubuntu .env
+sudo chmod 600 .env
+
+# Docker restart
 sudo docker compose down
 sudo docker compose up -d --build --force-recreate
 
-# 4. Tunggu MySQL booting (MySQL 8.0 agak lama startup-nya)
-sleep 15
+# Warming up MySQL
+sleep 20
 
-# 5. Jalankan perintah di dalam container
+# Laravel Setup
 sudo docker compose exec -T app composer install --no-dev --optimize-autoloader
 sudo docker compose exec -T app php artisan key:generate --force
-
-# 6. Clear cache biar Laravel baca DB_HOST=db dari .env yang baru di-copy
 sudo docker compose exec -T app php artisan config:clear
 sudo docker compose exec -T app php artisan config:cache
 
-# 7. Permission & Migration
+# Permissions
 sudo docker compose exec -T app chmod -R 775 storage bootstrap/cache
 sudo docker compose exec -T app chown -R www-data:www-data storage bootstrap/cache
+
+# Migration
 sudo docker compose exec -T app php artisan migrate --force
