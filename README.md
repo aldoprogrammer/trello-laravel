@@ -18,40 +18,6 @@ Backend API built with Laravel 12 for two modules currently present in codebase:
 - Terraform (AWS EC2 + Security Group)
 - Kubernetes manifest (MySQL deployment/service)
 
-## 🌐 Enterprise Infrastructure (AWS Cloud)
-
-Project ini dideploy dengan arsitektur **High Availability** menggunakan AWS:
-
-- **Deployment Strategy:** Automated via GitHub Actions & AWS CodeDeploy (Zero Downtime Mindset).
-- **Environment Management:** Menggunakan **AWS SSM Parameter Store**. Rahasia `.env` tidak disimpan di server/repo, melainkan ditarik dinamis saat runtime.
-- **Master-Slave Replication:** Database MySQL menggunakan arsitektur Read/Write splitting (Master untuk Write, Slave untuk Read) untuk skalabilitas query.
-- **Reverse Proxy:** Nginx Docker Container sebagai gateway utama pada port 80.
-- **Self-Hosted Runner:** Deployment dilakukan menggunakan runner yang terkonfigurasi pada instance EC2 sendiri.
-
-graph TD
-    User((User/Client)) -->|Port 80| Nginx[Nginx Container]
-    
-    subgraph "EC2 Instances (Multi-AZ)"
-        Nginx -->|Proxy Pass| App[Laravel App Container]
-        App -->|Fetch at Runtime| SSM[AWS SSM Parameter Store]
-        App -->|Jobs/Cache| Redis[(Redis Container)]
-        App -->|Search Index| Meili[(Meilisearch Container)]
-    end
-
-    subgraph "Database Layer (AWS RDS)"
-        App -->|Write Ops| Master[(MySQL Master)]
-        App -->|Read Ops| Slave[(MySQL Slave)]
-        Master -.->|Replication| Slave
-    end
-
-    subgraph "CI/CD Pipeline"
-        GH[GitHub Repo] -->|Push| GHA[GitHub Actions]
-        GHA -->|Trigger| CD[AWS CodeDeploy]
-        CD -->|Execute| Script[restart_server.sh]
-        Script -->|Inject| SSM
-    end
-
-
 ## Implemented Features
 
 ### 1) Auth + Trello-style API (Protected)
@@ -451,28 +417,53 @@ GitHub Actions workflow: `.github/workflows/deploy.yml`
 ## 🛠️ DevOps Operations
 
 ### Automated Deployment Flow
-Setiap kali melakukan `git push`, script `scripts/restart_server.sh` akan mengeksekusi:
-1. **Dynamic Secrets Retrieval:** Mengambil variabel environment dari AWS SSM.
-2. **Container Orchestration:** Melakukan rebuild & restart container secara otomatis.
-3. **Automated Post-Deployment:** - Autoload optimization via Composer.
-   - Dynamic `APP_KEY` generation.
-   - Cache clearing & configuration caching.
-   - Automated Database Migration pada Master DB.
+Upon every `git push`, the `scripts/restart_server.sh` automation script executes the following lifecycle:
 
-## 🧠 Engineering Decisions
+* **Dynamic Secrets Retrieval:** Securely pulls production environment variables from **AWS SSM Parameter Store**.
+* **Container Orchestration:** Triggers automated rebuilds and force-recreates the service stack to ensure environment parity and clean deployment.
+* **Automated Post-Deployment Hooks:**
+    * **Optimization:** Optimizes Composer autoloader for production performance.
+    * **Security & Cache:** Generates dynamic `APP_KEY` and warms up configuration/route caches.
+    * **Database Integrity:** Executes automated database migrations exclusively on the **Master node**.
 
-### 1. Why Master-Slave Replication?
-Untuk memisahkan beban traffic. Operasi **Write** (Create/Update Task) dilakukan di Master, sementara operasi **Read** (Dashboard/Search) diarahkan ke Read Replica (Slave). Ini mencegah query berat (seperti Meilisearch indexing) mengganggu performa transaksi utama.
+---
 
-### 2. Why AWS SSM instead of .env?
-Untuk menghindari *security risk* menyimpan rahasia di local storage atau environment variables yang statis. Dengan SSM, credentials hanya di-*inject* ke memory container saat deployment berlangsung.
+## 🌐 Enterprise Infrastructure (AWS Cloud)
 
-### 3. Why Redis & Meilisearch?
-- **Redis:** Mengurangi latency database dengan melakukan caching pada hasil API Summarization AI.
-- **Meilisearch:** Memberikan pengalaman pencarian yang jauh lebih cepat (O(1) search) dibandingkan query `LIKE %query%` pada MySQL konvensional.
+This project is deployed using a **High-Availability (HA)** architecture on AWS, focusing on security, resilience, and scalability:
 
-### 4. Hybrid Cloud Approach
-Meskipun project berjalan di EC2, saya menyediakan **Kubernetes (K8s) manifests** sebagai jalur migrasi jika traffic meningkat drastis, memungkinkan scaling horizontal yang lebih efisien di masa depan.
+* **Deployment Strategy:** Fully automated pipeline via **GitHub Actions** and **AWS CodeDeploy**, implementing a **Zero-Downtime** deployment mindset.
+* **Dynamic Secret Management:** Integrated with **AWS SSM Parameter Store**. Sensitive credentials are never stored in the repository or hardcoded on the server; they are fetched dynamically into the container environment at runtime.
+* **Database Scalability:** Implements **MySQL Master-Slave Replication** with **Read/Write Splitting**. The application intelligently routes write operations to the Master node and read queries to the Slave replicas to optimize performance.
+* **Reverse Proxy:** A dedicated **Nginx** Docker container serves as the primary gateway, handling traffic routing on port 80.
+* **Self-Hosted Runner:** Deployment orchestration is managed via a dedicated runner configured on an EC2 instance, providing full control over the build environment and security.
+
+### Infrastructure Architecture
+
+```mermaid
+graph TD
+    User((User/Client)) -->|Port 80| Nginx[Nginx Container]
+    
+    subgraph "EC2 Instances (Multi-AZ)"
+        Nginx -->|Proxy Pass| App[Laravel App Container]
+        App -->|Fetch at Runtime| SSM[AWS SSM Parameter Store]
+        App -->|Jobs/Cache| Redis[(Redis Container)]
+        App -->|Search Index| Meili[(Meilisearch Container)]
+    end
+
+    subgraph "Database Layer (AWS RDS Master-Slave)"
+        App -->|Write Ops| Master[(MySQL Master)]
+        App -->|Read Ops| Slave[(MySQL Slave)]
+        Master -.->|Replication| Slave
+    end
+
+    subgraph "CI/CD Pipeline"
+        GH[GitHub Repo] -->|Push| GHA[GitHub Actions]
+        GHA -->|Trigger| CD[AWS CodeDeploy]
+        CD -->|Execute| Script[restart_server.sh]
+        Script -->|Inject| SSM
+    end
+```    
 
 ## Terraform Usage
 
@@ -484,10 +475,10 @@ Quick start:
 
 ```powershell
 cd terraform
-.\terraform init
-.\terraform plan
-.\terraform apply
-.\terraform output
+terraform init
+terraform plan
+terraform apply
+terraform output
 ```
 
 ## Infra Artifacts
@@ -509,4 +500,3 @@ cd terraform
 - `routes/web.php`
 - `tests/Feature`, `tests/Unit`
 - `docs/swagger.yaml`
-
