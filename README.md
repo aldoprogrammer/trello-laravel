@@ -459,6 +459,21 @@ Setiap kali melakukan `git push`, script `scripts/restart_server.sh` akan mengek
    - Cache clearing & configuration caching.
    - Automated Database Migration pada Master DB.
 
+## 🧠 Engineering Decisions
+
+### 1. Why Master-Slave Replication?
+Untuk memisahkan beban traffic. Operasi **Write** (Create/Update Task) dilakukan di Master, sementara operasi **Read** (Dashboard/Search) diarahkan ke Read Replica (Slave). Ini mencegah query berat (seperti Meilisearch indexing) mengganggu performa transaksi utama.
+
+### 2. Why AWS SSM instead of .env?
+Untuk menghindari *security risk* menyimpan rahasia di local storage atau environment variables yang statis. Dengan SSM, credentials hanya di-*inject* ke memory container saat deployment berlangsung.
+
+### 3. Why Redis & Meilisearch?
+- **Redis:** Mengurangi latency database dengan melakukan caching pada hasil API Summarization AI.
+- **Meilisearch:** Memberikan pengalaman pencarian yang jauh lebih cepat (O(1) search) dibandingkan query `LIKE %query%` pada MySQL konvensional.
+
+### 4. Hybrid Cloud Approach
+Meskipun project berjalan di EC2, saya menyediakan **Kubernetes (K8s) manifests** sebagai jalur migrasi jika traffic meningkat drastis, memungkinkan scaling horizontal yang lebih efisien di masa depan.
+
 ## Terraform Usage
 
 To keep this README concise, Terraform commands are documented in:
@@ -494,3 +509,4 @@ cd terraform
 - `routes/web.php`
 - `tests/Feature`, `tests/Unit`
 - `docs/swagger.yaml`
+
