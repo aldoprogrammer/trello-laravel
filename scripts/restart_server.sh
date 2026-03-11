@@ -1,27 +1,32 @@
 #!/bin/bash
-# Pindah ke folder project
 cd /home/ubuntu/trello-laravel
 
-# Ngusir Nginx/Apache bawaan biar Port 80 kosong (Jaga-jaga buat instance baru)
+# 1. Ngusir pengganggu Port 80
 sudo systemctl stop nginx || true
 sudo systemctl stop apache2 || true
 
-# Matikan container lama (biar bener-bener clean)
-sudo docker compose down
+# 2. Formalitas .env (biar artisan gak mogok)
+if [ ! -f .env ]; then
+    touch .env
+fi
 
-# Build dan jalankan ulang
+# 3. Rebuild total
+sudo docker compose down
 sudo docker compose up -d --build --force-recreate
 
-# KUNCI BIAR GAK ERROR AUTOLOAD:
-# Tunggu kontainer stabil sebentar
+# 4. Tunggu mesin panas
 sleep 5
 
-# Install dependencies di dalam kontainer app (pake -T biar jalan di CI/CD)
+# 5. Pasang urat saraf (Autoload & Vendor)
 sudo docker compose exec -T app composer install --no-dev --optimize-autoloader
 
-# Setup izin storage & cache biar gak error 500
+# 6. Kasih nyawa (APP_KEY & Cache)
+sudo docker compose exec -T app php artisan key:generate --force
+sudo docker compose exec -T app php artisan config:cache
+
+# 7. Izin akses (Biar gak Error 500 pas nulis log/session)
 sudo docker compose exec -T app chmod -R 775 storage bootstrap/cache
 sudo docker compose exec -T app chown -R www-data:www-data storage bootstrap/cache
 
-# Generate key kalau belum ada (jaga-jaga instance baru)
-sudo docker compose exec -T app php artisan key:generate --force
+# 8. Migrasi (Biar DB Master-Slave lo sinkron skemanya)
+sudo docker compose exec -T app php artisan migrate --force
