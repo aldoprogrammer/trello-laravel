@@ -7,12 +7,57 @@ servers:
   - url: /
     description: Current host
 tags:
+  - name: System
   - name: Auth
   - name: Projects
   - name: Tasks
   - name: Companies
   - name: Jobs
 paths:
+  /api/health:
+    get:
+      tags:
+        - System
+      summary: Health check for API dependencies
+      description: Checks database and Redis availability.
+      responses:
+        '200':
+          description: All core services are healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: UP
+                  services:
+                    type: object
+                    properties:
+                      database:
+                        type: string
+                        example: OK
+                      redis:
+                        type: string
+                        example: OK
+                  timestamp:
+                    type: string
+                    format: date-time
+        '500':
+          description: One or more services are unavailable
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: DOWN
+                  error:
+                    type: string
+                    example: One or more services are unavailable
+                  message:
+                    type: string
   /api/auth/register:
     post:
       tags:
@@ -365,7 +410,7 @@ paths:
           required: false
           schema:
             type: string
-          description: Filter by partial company name
+          description: Filter by partial company name (SQL LIKE)
         - name: per_page
           in: query
           required: false
