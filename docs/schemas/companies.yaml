@@ -1,0 +1,68 @@
+Company:
+  type: object
+  properties:
+    id:
+      type: integer
+      example: 1
+    name:
+      type: string
+      example: PT Teknologi Jaya
+    created_at:
+      type: string
+      format: date-time
+      nullable: true
+    updated_at:
+      type: string
+      format: date-time
+      nullable: true
+
+CompanyRequest:
+  type: object
+  required:
+    - name
+  properties:
+    name:
+      type: string
+      maxLength: 255
+      example: PT Teknologi Jaya
+
+CompanyStoreResponse:
+  type: object
+  properties:
+    message:
+      type: string
+      example: Success
+    data:
+      $ref: '#/Company'
+
+CompanyUpdateResponse:
+  type: object
+  properties:
+    message:
+      type: string
+      example: Updated
+    data:
+      $ref: '#/Company'
+
+CompanyDeleteResponse:
+  type: object
+  properties:
+    message:
+      type: string
+      example: Deleted
+
+PaginatedCompanies:
+  type: object
+  properties:
+    data:
+      type: array
+      items:
+        $ref: '#/Company'
+    links:
+      $ref: './common.yaml#/PaginationLinks'
+    meta:
+      $ref: './common.yaml#/PaginationMeta'
+
+CompanyCollectionResponse:
+  allOf:
+    - $ref: '#/PaginatedCompanies'

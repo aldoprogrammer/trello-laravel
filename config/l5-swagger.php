@@ -12,7 +12,7 @@ return [
                 /*
                  * Route for accessing api documentation interface
                  */
-                'api' => 'api/docs',
+                'api' => 'api/internal-docs',
             ],
             'paths' => [
                 /*
@@ -54,7 +54,7 @@ return [
             /*
              * Route for accessing parsed swagger annotations.
              */
-            'docs' => 'api/openapi',
+            'docs' => 'api/internal-openapi',
 
             /*
              * Route for Oauth2 authentication callback.

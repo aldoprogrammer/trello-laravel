@@ -393,6 +393,11 @@ Test environment notes:
 ## API Docs
 
 - OpenAPI file: `docs/swagger.yaml`
+- Source of truth is split for readability:
+  - `docs/swagger.yaml` (root)
+  - `docs/paths/*.yaml` (auth, projects, tasks, jobs)
+  - `docs/components.yaml` (index)
+  - `docs/schemas/*.yaml` (common, auth, projects, tasks, jobs)
 - Web route for docs UI page: `/docs`
 - Swagger file route: `/docs/swagger.yaml`
 

@@ -15,7 +15,7 @@
     <script src="https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js"></script>
     <script>
         window.onload = () => {
-            const specUrl = `${window.location.origin}/docs/swagger.yaml`;
+            const specUrl = `${window.location.origin}/api/openapi`;
             SwaggerUIBundle({
                 url: specUrl,
                 dom_id: '#swagger-ui',

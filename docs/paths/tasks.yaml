@@ -10,13 +10,13 @@ statuses:
         content:
           application/json:
             schema:
-              $ref: '../openapi.yaml#/components/schemas/ApiResponseTaskStatuses'
+              $ref: '../components.yaml#/components/schemas/ApiResponseTaskStatuses'
       '401':
-        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+        $ref: '../components.yaml#/components/responses/Unauthorized'
 
 projectTasks:
   parameters:
-    - $ref: '../openapi.yaml#/components/parameters/ProjectId'
+    - $ref: '../components.yaml#/components/parameters/ProjectId'
   get:
     tags: [Tasks]
     summary: List tasks for a project
@@ -37,13 +37,13 @@ projectTasks:
         content:
           application/json:
             schema:
-              $ref: '../openapi.yaml#/components/schemas/ApiResponseTasks'
+              $ref: '../components.yaml#/components/schemas/ApiResponseTasks'
       '401':
-        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+        $ref: '../components.yaml#/components/responses/Unauthorized'
       '403':
-        $ref: '../openapi.yaml#/components/responses/Forbidden'
+        $ref: '../components.yaml#/components/responses/Forbidden'
       '404':
-        $ref: '../openapi.yaml#/components/responses/NotFound'
+        $ref: '../components.yaml#/components/responses/NotFound'
   post:
     tags: [Tasks]
     summary: Create a task for a project
@@ -54,27 +54,27 @@ projectTasks:
       content:
         application/json:
           schema:
-            $ref: '../openapi.yaml#/components/schemas/TaskRequest'
+            $ref: '../components.yaml#/components/schemas/TaskRequest'
     responses:
       '201':
         description: Task created
         content:
           application/json:
             schema:
-              $ref: '../openapi.yaml#/components/schemas/ApiResponseTask'
+              $ref: '../components.yaml#/components/schemas/ApiResponseTask'
       '401':
-        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+        $ref: '../components.yaml#/components/responses/Unauthorized'
       '403':
-        $ref: '../openapi.yaml#/components/responses/Forbidden'
+        $ref: '../components.yaml#/components/responses/Forbidden'
       '404':
-        $ref: '../openapi.yaml#/components/responses/NotFound'
+        $ref: '../components.yaml#/components/responses/NotFound'
       '422':
-        $ref: '../openapi.yaml#/components/responses/UnprocessableEntity'
+        $ref: '../components.yaml#/components/responses/UnprocessableEntity'
 
 projectTaskById:
   parameters:
-    - $ref: '../openapi.yaml#/components/parameters/ProjectId'
-    - $ref: '../openapi.yaml#/components/parameters/TaskId'
+    - $ref: '../components.yaml#/components/parameters/ProjectId'
+    - $ref: '../components.yaml#/components/parameters/TaskId'
   get:
     tags: [Tasks]
     summary: Get task detail
@@ -86,13 +86,13 @@ projectTaskById:
         content:
           application/json:
             schema:
-              $ref: '../openapi.yaml#/components/schemas/ApiResponseTask'
+              $ref: '../components.yaml#/components/schemas/ApiResponseTask'
       '401':
-        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+        $ref: '../components.yaml#/components/responses/Unauthorized'
       '403':
-        $ref: '../openapi.yaml#/components/responses/Forbidden'
+        $ref: '../components.yaml#/components/responses/Forbidden'
       '404':
-        $ref: '../openapi.yaml#/components/responses/NotFound'
+        $ref: '../components.yaml#/components/responses/NotFound'
   put:
     tags: [Tasks]
     summary: Update a task
@@ -103,22 +103,22 @@ projectTaskById:
       content:
         application/json:
           schema:
-            $ref: '../openapi.yaml#/components/schemas/TaskUpdateRequest'
+            $ref: '../components.yaml#/components/schemas/TaskUpdateRequest'
     responses:
       '200':
         description: Task updated
         content:
           application/json:
             schema:
-              $ref: '../openapi.yaml#/components/schemas/ApiResponseTask'
+              $ref: '../components.yaml#/components/schemas/ApiResponseTask'
       '401':
-        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+        $ref: '../components.yaml#/components/responses/Unauthorized'
       '403':
-        $ref: '../openapi.yaml#/components/responses/Forbidden'
+        $ref: '../components.yaml#/components/responses/Forbidden'
       '404':
-        $ref: '../openapi.yaml#/components/responses/NotFound'
+        $ref: '../components.yaml#/components/responses/NotFound'
       '422':
-        $ref: '../openapi.yaml#/components/responses/UnprocessableEntity'
+        $ref: '../components.yaml#/components/responses/UnprocessableEntity'
   delete:
     tags: [Tasks]
     summary: Delete a task
@@ -130,10 +130,10 @@ projectTaskById:
         content:
           application/json:
             schema:
-              $ref: '../openapi.yaml#/components/schemas/ApiResponseEmpty'
+              $ref: '../components.yaml#/components/schemas/ApiResponseEmpty'
       '401':
-        $ref: '../openapi.yaml#/components/responses/Unauthorized'
+        $ref: '../components.yaml#/components/responses/Unauthorized'
       '403':
-        $ref: '../openapi.yaml#/components/responses/Forbidden'
+        $ref: '../components.yaml#/components/responses/Forbidden'
       '404':
-        $ref: '../openapi.yaml#/components/responses/NotFound'
+        $ref: '../components.yaml#/components/responses/NotFound'
