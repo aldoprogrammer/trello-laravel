@@ -1,34 +1,33 @@
 #!/bin/bash
 cd /home/ubuntu/trello-laravel
 
-# 1. Matikan sisa-sisa pengganggu
+# Matikan sisa nginx host
 sudo systemctl stop nginx || true
 
-# 2. AMBIL ENV DARI AWS SSM (DINAMIS!)
-# Kita tarik value dari Parameter Store dan simpan jadi file .env
-echo "Fetching secrets from AWS Parameter Store..."
-aws ssm get-parameter --name "/trello/prod/env_file" --with-decryption --query "Parameter.Value" --output text > .env
+# Ambil ENV dari SSM
+echo "Pulling environment from AWS SSM..."
+/usr/local/bin/aws ssm get-parameter --name "/trello/prod/env_file" --with-decryption --query "Parameter.Value" --output text --region us-east-1 > .env
 
-# 3. KUNCI DOCKER: Paksa variabel Host agar sesuai dengan nama container
-# Karena di .env AWS lo DB_HOST-nya mungkin masih RDS, kita pastiin
-# Laravel tahu kalau Redis & Meilisearch ada di jaringan Docker
-sed -i 's/REDIS_HOST=.*/REDIS_HOST=laravel-redis/' .env
-sed -i 's/MEILISEARCH_HOST=.*/MEILISEARCH_HOST=http:\/\/laravel-meili:7700/' .env
+# Ownership fix agar Docker lancar baca file
+sudo chown ubuntu:ubuntu .env
+sudo chmod 600 .env
 
-# 4. Restart Docker
+# Docker restart
 sudo docker compose down
 sudo docker compose up -d --build --force-recreate
 
-# 5. Tunggu Container Ready
-sleep 15
+# Warming up MySQL
+sleep 20
 
-# 6. Post-Deployment Hooks
+# Laravel Setup
 sudo docker compose exec -T app composer install --no-dev --optimize-autoloader
 sudo docker compose exec -T app php artisan key:generate --force
 sudo docker compose exec -T app php artisan config:clear
 sudo docker compose exec -T app php artisan config:cache
 
-# 7. Permission & Migration
+# Permissions
 sudo docker compose exec -T app chmod -R 775 storage bootstrap/cache
 sudo docker compose exec -T app chown -R www-data:www-data storage bootstrap/cache
+
+# Migration
 sudo docker compose exec -T app php artisan migrate --force
