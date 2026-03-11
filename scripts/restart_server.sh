@@ -1,6 +1,7 @@
 #!/bin/bash
+# Pindah ke folder project
 cd /home/ubuntu/trello-laravel
-# Kasih izin eksekusi biar aman
-chmod -R 755 /home/ubuntu/trello-laravel
-# Restart docker atau service lo biar kodingan baru kebaca
-docker-compose up -d --build
+
+# Paksa pake Docker V2 (Spasi)
+sudo docker compose down
+sudo docker compose up -d --build --force-recreate
