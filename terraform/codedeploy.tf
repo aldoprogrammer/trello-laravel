@@ -31,7 +31,7 @@ resource "aws_codedeploy_deployment_group" "prod" {
   deployment_group_name = "TrelloProdGroup"
   service_role_arn      = aws_iam_role.codedeploy_service.arn
 
-  deployment_config_name = "CodeDeployDefault.OneAtATime"
+  deployment_config_name = "CodeDeployDefault.AllAtOnce"
 
   ec2_tag_set {
     ec2_tag_filter {

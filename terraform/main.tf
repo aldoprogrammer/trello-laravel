@@ -142,7 +142,7 @@ resource "aws_instance" "laravel_server" {
               set -e
               export DEBIAN_FRONTEND=noninteractive
               apt-get update -y
-              apt-get install -y nginx ruby-full wget curl ca-certificates gnupg
+              apt-get install -y nginx ruby-full wget curl ca-certificates gnupg unzip
 
               # Docker official repo (docker-compose-plugin is not in Ubuntu's default repos)
               install -m 0755 -d /etc/apt/keyrings
@@ -154,6 +154,12 @@ resource "aws_instance" "laravel_server" {
 
               systemctl enable docker
               usermod -aG docker ubuntu
+
+              # AWS CLI v2
+              curl -fsSL https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip -o /tmp/awscliv2.zip
+              unzip -qo /tmp/awscliv2.zip -d /tmp
+              /tmp/aws/install
+              rm -rf /tmp/aws /tmp/awscliv2.zip
 
               systemctl start nginx
               systemctl enable nginx
