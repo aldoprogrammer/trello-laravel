@@ -1,14 +1,6 @@
 # ==========================================
-# 1. DATA SOURCES & AMI
+# 1. AMI (set in terraform.tfvars — no ec2:DescribeImages or ssm:GetParameter)
 # ==========================================
-data "aws_ami" "ubuntu_noble" {
-  most_recent = true
-  owners      = ["099720109477"]
-  filter {
-    name   = "name"
-    values = ["ubuntu/images/hvm-ssd-gp3/ubuntu-noble-24.04-amd64-server-*"]
-  }
-}
 
 # ==========================================
 # 2. SECURITY GROUPS (The Security Layers)
@@ -93,11 +85,12 @@ resource "aws_lb_target_group" "laravel_tg" {
   protocol = "HTTP"
   vpc_id   = aws_vpc.main.id
   health_check {
-    path                = "/"
+    path                = "/api/health"
+    matcher             = "200"
     interval            = 30
     timeout             = 5
     healthy_threshold   = 2
-    unhealthy_threshold = 2
+    unhealthy_threshold = 3
   }
 }
 
@@ -123,11 +116,21 @@ resource "aws_lb_target_group_attachment" "laravel_attachment" {
 # ==========================================
 resource "aws_instance" "laravel_server" {
   count                  = 2
-  ami                    = data.aws_ami.ubuntu_noble.id
+  ami                    = var.ami_id
   instance_type          = var.instance_type
   subnet_id              = aws_subnet.public[count.index].id
   vpc_security_group_ids = [aws_security_group.laravel_sg.id]
-  key_name               = "laravel-trello"
+  key_name               = var.ec2_key_name != "" ? var.ec2_key_name : null
+  iam_instance_profile   = aws_iam_instance_profile.ec2_app.name
+
+  depends_on = [
+    time_sleep.ec2_after_instance_profile,
+    aws_route_table_association.public,
+  ]
+
+  timeouts {
+    create = "15m"
+  }
 
   root_block_device {
     volume_size = 20
@@ -136,14 +139,23 @@ resource "aws_instance" "laravel_server" {
 
   user_data = <<-EOF
               #!/bin/bash
-              sudo apt-get update -y
-              sudo apt-get install -y nginx docker.io docker-compose
-              sudo systemctl start nginx
-              sudo systemctl enable nginx
+              set -e
+              export DEBIAN_FRONTEND=noninteractive
+              apt-get update -y
+              apt-get install -y nginx docker.io docker-compose-plugin ruby-full wget
+              systemctl start nginx
+              systemctl enable nginx
+              CODEDEPLOY_URL="https://aws-codedeploy-${data.aws_region.current.id}.s3.${data.aws_region.current.id}.amazonaws.com/latest/install"
+              cd /tmp
+              wget -q "$CODEDEPLOY_URL" -O install
+              chmod +x ./install
+              ./install auto
+              systemctl enable codedeploy-agent || true
               EOF
 
   tags = {
     Name = "Laravel-Server-Prod-${count.index + 1}"
+    App  = "laravel-trello"
   }
 }
 
@@ -157,17 +169,30 @@ resource "aws_db_subnet_group" "laravel_db_subnet" {
 }
 
 resource "aws_db_instance" "laravel_db" {
-  allocated_storage    = 20
-  storage_type         = "gp3"
-  engine               = "mysql"
-  engine_version       = "8.0"
-  instance_class       = "db.t3.micro"
-  db_name              = "laravel_trello"
-  username             = "admin"
-  password             = "PasswordRahasia123"
-  parameter_group_name = "default.mysql8.0"
-  db_subnet_group_name = aws_db_subnet_group.laravel_db_subnet.name
+  allocated_storage          = 20
+  storage_type               = "gp3"
+  engine                     = "mysql"
+  engine_version             = "8.0"
+  instance_class             = "db.t3.micro"
+  db_name                    = "laravel_trello"
+  username                   = "admin"
+  password                   = var.db_password
+  parameter_group_name       = "default.mysql8.0"
+  db_subnet_group_name       = aws_db_subnet_group.laravel_db_subnet.name
+  vpc_security_group_ids     = [aws_security_group.db_sg.id]
+  skip_final_snapshot        = true
+  publicly_accessible        = false
+  backup_retention_period    = var.enable_rds_read_replica ? 7 : 0
+  auto_minor_version_upgrade = true
+}
+
+resource "aws_db_instance" "laravel_db_replica" {
+  count = var.enable_rds_read_replica ? 1 : 0
+
+  identifier             = "laravel-trello-replica"
+  replicate_source_db    = aws_db_instance.laravel_db.identifier
+  instance_class         = "db.t3.micro"
+  skip_final_snapshot    = true
   vpc_security_group_ids = [aws_security_group.db_sg.id]
-  skip_final_snapshot  = true
-  publicly_accessible  = false # SANGAT PENTING: Private!
+  publicly_accessible    = false
 }

@@ -296,20 +296,121 @@ php artisan migrate
 php artisan serve
 ```
 
-## Docker Compose
+## Run with Docker
 
-Available services in `docker-compose.yml`:
-- `app` (Laravel/PHP-FPM)
-- `db` (MySQL 8)
-- `mysql-slave` (MySQL 8 read replica target, manual sync)
-- `meilisearch`
-- `redis`
+### Prerequisites
 
-Run:
+- [Docker](https://docs.docker.com/get-docker/) with the **Compose plugin** (`docker compose version`).
+- Ports free on the host: HTTP (see `APP_PORT` below, default **8080**), **7700** (Meilisearch), **6380** (Redis mapped from container 6379).
+
+### Services (`docker-compose.yml`)
+
+| Service | Role |
+|--------|------|
+| `nginx-gateway` | Nginx → `app:9000` (PHP-FPM); publishes `${APP_PORT:-80}:80` |
+| `app` | Laravel (PHP-FPM) |
+| `worker` | `php artisan queue:work` (queues, e.g. job summaries) |
+| `db` | MySQL 8 (master / writes) |
+| `mysql-slave` | MySQL 8 (read replica; manual sync—see below) |
+| `redis` | Cache, sessions, queues |
+| `meilisearch` | Scout search |
+
+### 1. Environment file
+
+From the project root:
+
+```bash
+cp .env.example .env
+```
+
+For containers talking to each other on the Compose network, set **service names as hosts** (not `127.0.0.1`). Align DB credentials with `docker-compose.yml` (`MYSQL_*` on the `db` service: database `trello_test_aldo`, user/password `root` / `root` as configured there).
+
+Minimal Docker-oriented values (adjust `APP_PORT` / `APP_URL` if you change the host port):
+
+```env
+APP_URL=http://localhost:8080
+APP_PORT=8080
+
+DB_CONNECTION=mysql
+DB_HOST=db
+# Local dev without replication: use `db` so reads see migrated tables. Use `mysql-slave` only after syncing (see "MySQL Master/Slave").
+DB_SLAVE_HOST=db
+DB_PORT=3306
+DB_DATABASE=trello_test_aldo
+DB_USERNAME=root
+DB_PASSWORD=root
+
+REDIS_HOST=redis
+REDIS_PORT=6379
+
+SCOUT_DRIVER=meilisearch
+MEILISEARCH_HOST=http://meilisearch:7700
+MEILISEARCH_KEY=masterKey
+
+GEMINI_API_KEY=   # required for /api/jobs/{id}/summarize when using the default AI binding
+```
+
+### 2. Start the stack
 
 ```bash
 docker compose up -d --build
 ```
+
+`app` and `worker` use a **named Docker volume** for `vendor/` so Composer packages are **not** read from the Windows/macOS bind mount (that mount is very slow for thousands of PHP files). The copy of `vendor/` on your laptop is **ignored inside the container**—always install and update PHP dependencies **in the container**:
+
+```bash
+docker compose exec app composer install
+# After changing composer.json / composer.lock on the host:
+docker compose exec app composer update
+```
+
+Rebuild images after Dockerfile changes: `docker compose build --no-cache app worker` (or `docker compose up -d --build`).
+
+### Docker performance (slow requests on Windows)
+
+If API times are seconds while SQL is only milliseconds:
+
+- **`vendor/` volume** (above) avoids slow cross-OS file I/O for dependencies.
+- **Telescope:** keep `TELESCOPE_ENABLED=true` while debugging or demoing (request/query inspection). Set **`false`** only when you want to measure raw API speed—Telescope records every request and adds overhead by design.
+- **Best:** keep the project clone on the **Linux filesystem inside WSL2** (e.g. `~/projects/...`), not on `D:\` mounted as `/mnt/d`, for the fastest bind mount.
+- Rebuild after this repo’s Docker changes: `docker compose up -d --build`.
+
+### 3. Database and caches (first run)
+
+Wait a few seconds for MySQL to accept connections, then:
+
+```bash
+docker compose exec app php artisan key:generate
+docker compose exec app php artisan migrate
+```
+
+Optional: if you use Scout with jobs data, import the index when needed (use the **short model name** so Scout resolves `App\Models\Job` correctly; avoid passing the full class in PowerShell):
+
+```bash
+docker compose exec app php artisan scout:import Job
+```
+
+### 4. Use the API
+
+- **HTTP base URL:** `http://localhost:8080` if `APP_PORT=8080` in `.env` (or `http://localhost` if `APP_PORT` is unset and Compose defaults to port **80**).
+- **Meilisearch UI / host access:** `http://127.0.0.1:7700` (mapped in Compose).
+- **Redis from the host:** `127.0.0.1:6380` (container Redis is still `redis:6379` from PHP).
+
+Example:
+
+```bash
+curl http://127.0.0.1:8080/api/jobs
+```
+
+### 5. Useful commands
+
+```bash
+docker compose logs -f app worker
+docker compose exec app php artisan tinker
+docker compose down
+```
+
+The `worker` service runs the queue; job summarization and other queued work need it running (included in `docker compose up`).
 
 ## MySQL Master/Slave (Read/Write Split)
 
@@ -323,18 +424,14 @@ Important:
 - `DB::connection()->getConfig('host')` is config fallback only.
 - To verify real active server, query `@@hostname` from write/read PDO.
 
-### Persistent MySQL Data on Windows (D: drive)
+### Persistent MySQL data (Compose volumes)
 
-Compose mounts:
-- `D:/docker-data/laravel-be/mysql-master:/var/lib/mysql`
-- `D:/docker-data/laravel-be/mysql-slave:/var/lib/mysql`
+`docker-compose.yml` stores data under the project directory:
 
-Create folders once:
+- Master: `./mysql-data` → `/var/lib/mysql` on `db`
+- Slave: `./mysql-slave` → `/var/lib/mysql` on `mysql-slave`
 
-```powershell
-mkdir D:\docker-data\laravel-be\mysql-master
-mkdir D:\docker-data\laravel-be\mysql-slave
-```
+Docker creates these folders on first start. To use fixed paths on another drive (e.g. `D:\docker-data\...`), change the volume entries in `docker-compose.yml` and create those directories before `docker compose up`.
 
 ### Manual Verification (Real Host Check)
 
@@ -348,7 +445,7 @@ docker inspect -f "{{.Config.Hostname}}" laravel-db-slave
 2. Open tinker inside Docker app container:
 
 ```powershell
-docker-compose exec app php artisan tinker
+docker compose exec app php artisan tinker
 ```
 
 3. In Tinker, check write and read hosts:
@@ -371,7 +468,7 @@ Since replication is not configured, run manual sync after schema/data changes:
 ```
 
 Typical flow:
-1. `docker-compose exec app php artisan migrate` (master only)
+1. `docker compose exec app php artisan migrate` (master only)
 2. `.\scripts\sync-master-to-slave.ps1`
 
 ## Testing
@@ -403,16 +500,12 @@ Test environment notes:
 
 ## CI/CD
 
-GitHub Actions workflow: `.github/workflows/deploy.yml`
+Workflow: [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml)
 
-- `test` job (on push/PR to `main`)
-  - Uses MySQL service
-  - Runs migration + test suite
-- `deploy` job (push to `main` only)
-  - Runs on self-hosted Linux runner
-  - Pulls latest main
-  - `composer install --no-dev`
-  - Migrates + caches config/routes/views
+- **`test`** — on push/PR to `main`: MySQL + Meilisearch services, `composer audit`, `php artisan test`
+- **`deploy`** — on push to `main` only: `aws deploy create-deployment` (CodeDeploy revision from **GitHub**), then waits until deployment succeeds
+
+**AWS setup (new IAM, CodeDeploy agent, SSM, Terraform):** see [`docs/DEPLOY.md`](docs/DEPLOY.md).
 
 ## 🛠️ DevOps Operations
 
@@ -423,7 +516,7 @@ Upon every `git push`, the `scripts/restart_server.sh` automation script execute
 * **Container Orchestration:** Triggers automated rebuilds and force-recreates the service stack to ensure environment parity and clean deployment.
 * **Automated Post-Deployment Hooks:**
     * **Optimization:** Optimizes Composer autoloader for production performance.
-    * **Security & Cache:** Generates dynamic `APP_KEY` and warms up configuration/route caches.
+    * **Security & Cache:** stable `APP_KEY` from SSM; config/route/view cache after deploy.
     * **Database Integrity:** Executes automated database migrations exclusively on the **Master node**.
 
 ---

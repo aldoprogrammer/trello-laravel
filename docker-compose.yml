@@ -20,7 +20,8 @@ services:
     working_dir: /var/www
     volumes:
       - .:/var/www
-      # - /var/www/vendor
+      # Keep Composer packages off the Windows bind mount (much faster I/O on Docker Desktop).
+      - laravel_vendor:/var/www/vendor
     depends_on:
       - db
       - redis
@@ -101,3 +102,6 @@ services:
 networks:
   backend:
     driver: bridge
+
+volumes:
+  laravel_vendor:

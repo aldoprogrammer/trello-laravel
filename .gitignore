@@ -27,6 +27,7 @@ Thumbs.db
 *.exe
 terraform.tfstate
 terraform.tfstate.backup
+terraform/terraform.tfvars
 
 # Local database runtime files (do not commit)
 docker/mysql/

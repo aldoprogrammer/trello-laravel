@@ -7,5 +7,11 @@ output "instance_public_ips" {
 }
 
 output "rds_endpoint" {
-  value = aws_db_instance.laravel_db.endpoint
+  value     = aws_db_instance.laravel_db.endpoint
+  sensitive = false
+}
+
+output "rds_replica_endpoint" {
+  description = "Read replica host (use as DB_SLAVE_HOST in Laravel when enable_rds_read_replica = true)"
+  value       = var.enable_rds_read_replica ? aws_db_instance.laravel_db_replica[0].address : null
 }

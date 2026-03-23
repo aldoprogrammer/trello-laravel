@@ -1,33 +1,49 @@
 #!/bin/bash
+set -euo pipefail
 cd /home/ubuntu/trello-laravel
 
-# Matikan sisa nginx host
-sudo systemctl stop nginx || true
+# docker compose v2 (plugin) or legacy docker-compose v1
+if docker compose version >/dev/null 2>&1; then
+  DC=(sudo docker compose)
+else
+  DC=(sudo docker-compose)
+fi
 
-# Ambil ENV dari SSM
+# Stop host nginx (port 80 is used by nginx-gateway container)
+sudo systemctl stop nginx 2>/dev/null || true
+
 echo "Pulling environment from AWS SSM..."
-/usr/local/bin/aws ssm get-parameter --name "/trello/prod/env_file" --with-decryption --query "Parameter.Value" --output text --region us-east-1 > .env
+AWS_REGION="${AWS_REGION:-ap-southeast-1}"
+aws ssm get-parameter --name "/trello/prod/env_file" --with-decryption --query "Parameter.Value" --output text --region "$AWS_REGION" > .env
 
-# Ownership fix agar Docker lancar baca file
 sudo chown ubuntu:ubuntu .env
 sudo chmod 600 .env
 
-# Docker restart
-sudo docker compose down
-sudo docker compose up -d --build --force-recreate
+echo "Starting Docker stack..."
+"${DC[@]}" down
+"${DC[@]}" up -d --build --force-recreate
 
-# Warming up MySQL
-sleep 20
+# Wait for DB/Redis (tune sleep if using RDS — often faster than a long fixed sleep)
+sleep 15
 
-# Laravel Setup
-sudo docker compose exec -T app composer install --no-dev --optimize-autoloader
-sudo docker compose exec -T app php artisan key:generate --force
-sudo docker compose exec -T app php artisan config:clear
-sudo docker compose exec -T app php artisan config:cache
+"${DC[@]}" exec -T app composer install --no-dev --optimize-autoloader --no-interaction
+# APP_KEY must come from SSM .env; do not regenerate every deploy (invalidates sessions/tokens).
+if ! grep -qE '^APP_KEY=base64:.+' .env 2>/dev/null; then
+  echo "WARNING: APP_KEY missing in .env from SSM — generating once."
+  "${DC[@]}" exec -T app php artisan key:generate --force
+fi
 
-# Permissions
-sudo docker compose exec -T app chmod -R 775 storage bootstrap/cache
-sudo docker compose exec -T app chown -R www-data:www-data storage bootstrap/cache
+"${DC[@]}" exec -T app php artisan config:clear
+"${DC[@]}" exec -T app php artisan config:cache
+"${DC[@]}" exec -T app php artisan route:cache 2>/dev/null || true
+"${DC[@]}" exec -T app php artisan view:cache 2>/dev/null || true
 
-# Migration
-sudo docker compose exec -T app php artisan migrate --force
+"${DC[@]}" exec -T app chmod -R 775 storage bootstrap/cache
+"${DC[@]}" exec -T app chown -R www-data:www-data storage bootstrap/cache
+
+"${DC[@]}" exec -T app php artisan migrate --force
+
+echo "Restart worker to pick up new code..."
+"${DC[@]}" restart worker 2>/dev/null || true
+
+echo "Deploy hook finished."

@@ -1,0 +1,14 @@
+# Copy to terraform.tfvars (gitignored) and adjust.
+#
+# Terraform uses whatever credentials are active for the AWS CLI:
+#   default profile, or set AWS_PROFILE (e.g. laravel-trello).
+
+# Region + AMI must match (AMI IDs are per-region).
+# Examples: ap-southeast-1 (Singapore), ap-southeast-3 (Jakarta), us-east-1 (N. Virginia)
+# aws_region = "ap-southeast-1"
+
+# Required — paste AMI from the console for THAT region (see TERRAFORM.md).
+ami_id = "ami-0123456789abcdef"
+
+# db_password = "use-a-strong-password"
+# enable_rds_read_replica = false
