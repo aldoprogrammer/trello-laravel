@@ -473,13 +473,25 @@ Typical flow:
 
 ## Testing
 
-Run all tests:
+### Local (Docker)
 
 ```bash
-./vendor/bin/pest
+# Run the full test suite (SQLite in-memory, no external services needed)
+docker compose exec app php artisan test
+
+# Security audit only
+docker compose exec app composer audit
+
+# Both together (mirrors CI)
+docker compose exec app composer audit && docker compose exec app php artisan test
 ```
 
-Current test coverage includes:
+### CI
+
+The `test` job in [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) runs on every push/PR to `main` with real MySQL + Meilisearch service containers, `composer audit`, and `php artisan test`.
+
+### Coverage
+
 - Feature: `JobSearchTest`, `SecurityTest`
 - Unit: `JobServiceTest`
 
