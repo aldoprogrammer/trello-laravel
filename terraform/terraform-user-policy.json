@@ -9,6 +9,7 @@
         "elasticloadbalancing:*",
         "rds:*",
         "codedeploy:*",
+        "s3:*",
         "ssm:PutParameter",
         "ssm:GetParameter",
         "ssm:DeleteParameter",
