@@ -142,15 +142,28 @@ resource "aws_instance" "laravel_server" {
               set -e
               export DEBIAN_FRONTEND=noninteractive
               apt-get update -y
-              apt-get install -y nginx docker.io docker-compose-plugin ruby-full wget
+              apt-get install -y nginx ruby-full wget curl ca-certificates gnupg
+
+              # Docker official repo (docker-compose-plugin is not in Ubuntu's default repos)
+              install -m 0755 -d /etc/apt/keyrings
+              curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+              chmod a+r /etc/apt/keyrings/docker.gpg
+              echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" > /etc/apt/sources.list.d/docker.list
+              apt-get update -y
+              apt-get install -y docker-ce docker-ce-cli containerd.io docker-compose-plugin
+
+              systemctl enable docker
+              usermod -aG docker ubuntu
+
               systemctl start nginx
               systemctl enable nginx
+
               CODEDEPLOY_URL="https://aws-codedeploy-${data.aws_region.current.id}.s3.${data.aws_region.current.id}.amazonaws.com/latest/install"
               cd /tmp
               wget -q "$CODEDEPLOY_URL" -O install
               chmod +x ./install
               ./install auto
-              systemctl enable codedeploy-agent || true
+              systemctl enable codedeploy-agent
               EOF
 
   tags = {

@@ -12,5 +12,5 @@ permissions:
 hooks:
   AfterInstall:
     - location: scripts/restart_server.sh
-      timeout: 300
+      timeout: 600
       runas: root
