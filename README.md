@@ -499,6 +499,25 @@ Test environment notes:
 - `phpunit.xml` uses SQLite in-memory
 - `SCOUT_DRIVER=collection` in tests (prevents Meilisearch dependency)
 
+## Database Replication Check
+
+`GET /api/db-check` — verifies that Laravel's read/write splitting is active and that the write connection hits the RDS master while the read connection hits the replica.
+
+Example response when replication is active:
+
+```json
+{
+  "read_write_splitting": true,
+  "write_connection": { "hostname": "ip-10-0-...", "read_only": "OFF", "role": "MASTER" },
+  "read_connection":  { "hostname": "ip-10-0-...", "read_only": "ON",  "role": "SLAVE" },
+  "config": { "DB_HOST": "...master...", "DB_SLAVE_HOST": "...replica...", "sticky": true }
+}
+```
+
+When both point to the same host (replica disabled), `read_write_splitting` returns `false` and both roles show `MASTER`.
+
+To enable the replica: set `enable_rds_read_replica = true` in `terraform.tfvars`, run `terraform apply`, then update `DB_SLAVE_HOST` in the SSM parameter to the replica endpoint from `terraform output rds_replica_endpoint`.
+
 ## API Docs
 
 - OpenAPI file: `docs/swagger.yaml`

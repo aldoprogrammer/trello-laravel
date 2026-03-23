@@ -18,6 +18,8 @@ return [
 
     'enabled' => env('TELESCOPE_ENABLED', true),
 
+    'access_key' => env('TELESCOPE_ACCESS_KEY'),
+
     /*
     |--------------------------------------------------------------------------
     | Telescope Domain

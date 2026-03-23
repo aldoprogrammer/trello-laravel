@@ -202,6 +202,7 @@ resource "aws_db_instance" "laravel_db" {
   skip_final_snapshot        = true
   publicly_accessible        = false
   backup_retention_period    = var.enable_rds_read_replica ? 7 : 0
+  apply_immediately          = true
   auto_minor_version_upgrade = true
 }
 

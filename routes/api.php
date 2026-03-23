@@ -9,6 +9,40 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
 
+Route::get('/db-check', function () {
+    $conn = DB::connection();
+
+    $writePdo = $conn->getPdo();
+    $readPdo  = $conn->getReadPdo();
+
+    $writeReadOnly = $writePdo->query("SHOW VARIABLES LIKE 'read_only'")->fetch(\PDO::FETCH_ASSOC);
+    $readReadOnly  = $readPdo->query("SHOW VARIABLES LIKE 'read_only'")->fetch(\PDO::FETCH_ASSOC);
+
+    $writeHost = $writePdo->query("SELECT @@hostname AS h")->fetch(\PDO::FETCH_ASSOC)['h'];
+    $readHost  = $readPdo->query("SELECT @@hostname AS h")->fetch(\PDO::FETCH_ASSOC)['h'];
+
+    $isSplit = ($writePdo !== $readPdo);
+
+    return response()->json([
+        'read_write_splitting' => $isSplit,
+        'write_connection' => [
+            'hostname'  => $writeHost,
+            'read_only' => $writeReadOnly['Value'] ?? 'unknown',
+            'role'      => ($writeReadOnly['Value'] ?? '') === 'OFF' ? 'MASTER' : 'SLAVE',
+        ],
+        'read_connection' => [
+            'hostname'  => $readHost,
+            'read_only' => $readReadOnly['Value'] ?? 'unknown',
+            'role'      => ($readReadOnly['Value'] ?? '') === 'ON' ? 'SLAVE' : 'MASTER',
+        ],
+        'config' => [
+            'DB_HOST'       => config('database.connections.mysql.write.host.0', 'not set'),
+            'DB_SLAVE_HOST' => config('database.connections.mysql.read.host.0', 'not set'),
+            'sticky'        => config('database.connections.mysql.sticky'),
+        ],
+    ]);
+});
+
 Route::get('/health', function () {
     try {
         // 1. Cek Database

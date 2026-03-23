@@ -41,3 +41,62 @@ health:
                   example: One or more services are unavailable
                 message:
                   type: string
+
+dbCheck:
+  get:
+    tags: [System]
+    summary: Database replication check
+    description: |
+      Verifies MySQL read/write splitting. Shows which host handles writes (master)
+      and which handles reads (slave). When `read_write_splitting` is `true`,
+      Laravel routes SELECT queries to the RDS read replica and writes to the master.
+    responses:
+      '200':
+        description: Replication status
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                read_write_splitting:
+                  type: boolean
+                  description: true when read and write PDOs point to different hosts
+                  example: true
+                write_connection:
+                  type: object
+                  properties:
+                    hostname:
+                      type: string
+                      example: ip-10-0-1-42
+                    read_only:
+                      type: string
+                      enum: ['OFF', 'ON']
+                      example: 'OFF'
+                    role:
+                      type: string
+                      enum: [MASTER, SLAVE]
+                      example: MASTER
+                read_connection:
+                  type: object
+                  properties:
+                    hostname:
+                      type: string
+                      example: ip-10-0-0-87
+                    read_only:
+                      type: string
+                      enum: ['OFF', 'ON']
+                      example: 'ON'
+                    role:
+                      type: string
+                      enum: [MASTER, SLAVE]
+                      example: SLAVE
+                config:
+                  type: object
+                  properties:
+                    DB_HOST:
+                      type: string
+                    DB_SLAVE_HOST:
+                      type: string
+                    sticky:
+                      type: boolean
+                      example: true
