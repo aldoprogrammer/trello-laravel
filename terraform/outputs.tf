@@ -1,9 +1,17 @@
-output "alb_dns_name" {
+output "dev_alb_dns_name" {
   value = aws_lb.laravel_alb.dns_name
 }
 
-output "instance_public_ips" {
+output "dev_instance_public_ips" {
   value = aws_instance.laravel_server[*].public_ip
+}
+
+output "prod_alb_dns_name" {
+  value = aws_lb.prod_alb.dns_name
+}
+
+output "prod_instance_public_ips" {
+  value = aws_instance.prod_server[*].public_ip
 }
 
 output "rds_endpoint" {

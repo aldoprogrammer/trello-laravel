@@ -1,14 +1,14 @@
-name: CI/CD Development
+name: CI/CD Production
 
 on:
   push:
-    branches: [development]
+    branches: [main]
   pull_request:
-    branches: [development]
+    branches: [main]
   workflow_dispatch:
 
 concurrency:
-  group: deploy-${{ github.ref }}
+  group: deploy-prod-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -59,7 +59,7 @@ jobs:
 
   deploy:
     needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/development'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -92,7 +92,7 @@ jobs:
 
           DEPLOYMENT_ID=$(aws deploy create-deployment \
             --application-name TrelloApp \
-            --deployment-group-name TrelloDevGroup \
+            --deployment-group-name TrelloProductionGroup \
             --s3-location "bucket=${BUCKET},key=${KEY},bundleType=zip" \
             --file-exists-behavior OVERWRITE \
             --query deploymentId \

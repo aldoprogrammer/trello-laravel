@@ -35,7 +35,7 @@ resource "aws_iam_instance_profile" "ec2_app" {
 
 data "aws_caller_identity" "current" {}
 
-# Allow `aws ssm get-parameter` for `/trello/prod/env_file` (see scripts/restart_server.sh)
+# Allow `aws ssm get-parameter` for `/trello/*/env_file` (see scripts/restart_server.sh)
 resource "aws_iam_role_policy" "ec2_ssm_env_file" {
   name = "laravel-ec2-ssm-env-file"
   role = aws_iam_role.ec2_app.id
@@ -47,7 +47,7 @@ resource "aws_iam_role_policy" "ec2_ssm_env_file" {
         "ssm:GetParameter",
         "ssm:GetParameters"
       ]
-      Resource = "arn:aws:ssm:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:parameter/trello/prod/*"
+      Resource = "arn:aws:ssm:${data.aws_region.current.id}:${data.aws_caller_identity.current.account_id}:parameter/trello/*"
     }]
   })
 }

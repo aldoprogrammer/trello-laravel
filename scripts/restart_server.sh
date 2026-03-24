@@ -12,9 +12,14 @@ fi
 # Stop host nginx (port 80 is used by nginx-gateway container)
 sudo systemctl stop nginx 2>/dev/null || true
 
-echo "Pulling environment from AWS SSM..."
+DEPLOY_ENV="dev"
+if [ -f /home/ubuntu/.deploy_env ]; then
+  DEPLOY_ENV=$(cat /home/ubuntu/.deploy_env | tr -d '[:space:]')
+fi
+
+echo "Pulling environment from AWS SSM (env=${DEPLOY_ENV})..."
 AWS_REGION="${AWS_REGION:-ap-southeast-1}"
-aws ssm get-parameter --name "/trello/prod/env_file" --with-decryption --query "Parameter.Value" --output text --region "$AWS_REGION" > .env
+aws ssm get-parameter --name "/trello/${DEPLOY_ENV}/env_file" --with-decryption --query "Parameter.Value" --output text --region "$AWS_REGION" > .env
 
 sudo chown ubuntu:ubuntu .env
 sudo chmod 600 .env

@@ -26,9 +26,9 @@ resource "aws_codedeploy_app" "laravel" {
   compute_platform = "Server"
 }
 
-resource "aws_codedeploy_deployment_group" "prod" {
+resource "aws_codedeploy_deployment_group" "dev" {
   app_name              = aws_codedeploy_app.laravel.name
-  deployment_group_name = "TrelloProdGroup"
+  deployment_group_name = "TrelloDevGroup"
   service_role_arn      = aws_iam_role.codedeploy_service.arn
 
   deployment_config_name = "CodeDeployDefault.AllAtOnce"
@@ -38,6 +38,27 @@ resource "aws_codedeploy_deployment_group" "prod" {
       key   = "App"
       type  = "KEY_AND_VALUE"
       value = "laravel-trello"
+    }
+  }
+
+  auto_rollback_configuration {
+    enabled = true
+    events  = ["DEPLOYMENT_FAILURE"]
+  }
+}
+
+resource "aws_codedeploy_deployment_group" "production" {
+  app_name              = aws_codedeploy_app.laravel.name
+  deployment_group_name = "TrelloProductionGroup"
+  service_role_arn      = aws_iam_role.codedeploy_service.arn
+
+  deployment_config_name = "CodeDeployDefault.AllAtOnce"
+
+  ec2_tag_set {
+    ec2_tag_filter {
+      key   = "App"
+      type  = "KEY_AND_VALUE"
+      value = "laravel-trello-prod"
     }
   }
 
