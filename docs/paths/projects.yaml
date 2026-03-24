@@ -13,6 +13,13 @@ projects:
           maximum: 100
           default: 15
         description: Items per page
+      - name: page
+        in: query
+        schema:
+          type: integer
+          minimum: 1
+          default: 1
+        description: Page number
     responses:
       '200':
         description: Project list

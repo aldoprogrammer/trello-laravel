@@ -2,6 +2,8 @@ jobs:
   get:
     tags: [Jobs]
     summary: List jobs with search and filters
+    security:
+      - bearerAuth: []
     parameters:
       - name: search
         in: query
@@ -47,6 +49,8 @@ jobs:
   post:
     tags: [Jobs]
     summary: Create a new job
+    security:
+      - bearerAuth: []
     requestBody:
       required: true
       content:
@@ -69,6 +73,8 @@ summarizeJob:
   post:
     tags: [Jobs]
     summary: Queue AI summary generation for a job
+    security:
+      - bearerAuth: []
     responses:
       '200':
         description: Summary processing started
@@ -87,6 +93,8 @@ jobSummary:
   get:
     tags: [Jobs]
     summary: Get cached summary result for a job
+    security:
+      - bearerAuth: []
     responses:
       '200':
         description: Job summary text

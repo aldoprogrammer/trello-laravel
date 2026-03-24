@@ -216,6 +216,13 @@ paths:
             maximum: 100
             default: 15
           description: Items per page
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: Page number
       responses:
         '200':
           description: Project list
@@ -350,6 +357,13 @@ paths:
             maximum: 100
             default: 15
           description: Items per page
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: Page number
       responses:
         '200':
           description: Task list
@@ -594,6 +608,8 @@ paths:
       tags:
         - Jobs
       summary: List jobs with search and filters
+      security:
+        - bearerAuth: []
       parameters:
         - name: search
           in: query
@@ -640,6 +656,8 @@ paths:
       tags:
         - Jobs
       summary: Create a new job
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -662,6 +680,8 @@ paths:
       tags:
         - Jobs
       summary: Queue AI summary generation for a job
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Summary processing started
@@ -680,6 +700,8 @@ paths:
       tags:
         - Jobs
       summary: Get cached summary result for a job
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Job summary text
