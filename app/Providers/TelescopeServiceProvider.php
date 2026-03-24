@@ -19,15 +19,8 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
 
         $this->hideSensitiveRequestDetails();
 
-        $isLocalLike = $this->app->environment(['local', 'development', 'testing']);
-
-        Telescope::filter(function (IncomingEntry $entry) use ($isLocalLike) {
-            return $isLocalLike ||
-                   $entry->isReportableException() ||
-                   $entry->isFailedRequest() ||
-                   $entry->isFailedJob() ||
-                   $entry->isScheduledTask() ||
-                   $entry->hasMonitoredTag();
+        Telescope::filter(function (IncomingEntry $entry) {
+            return true;
         });
     }
 
@@ -62,8 +55,16 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
             }
 
             $key = config('telescope.access_key');
+            if (!$key) {
+                return false;
+            }
 
-            return $key && request()->query('key') === $key;
+            // Persist access in session so Telescope SPA navigation keeps working
+            if (request()->query('key') === $key) {
+                session()->put('telescope_authorized', true);
+            }
+
+            return session()->get('telescope_authorized', false);
         });
     }
 }
