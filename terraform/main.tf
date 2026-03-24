@@ -166,6 +166,9 @@ resource "aws_instance" "laravel_server" {
               /tmp/aws/install
               rm -rf /tmp/aws /tmp/awscliv2.zip
 
+              echo "dev" > /home/ubuntu/.deploy_env
+              chown ubuntu:ubuntu /home/ubuntu/.deploy_env
+
               systemctl start nginx
               systemctl enable nginx
 
