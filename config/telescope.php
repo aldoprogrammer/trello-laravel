@@ -115,6 +115,7 @@ return [
     ],
 
     'ignore_paths' => [
+        'api/health',
         'livewire*',
         'nova-api*',
         'pulse*',
