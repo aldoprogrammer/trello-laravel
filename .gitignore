@@ -38,4 +38,4 @@ tmp-master-dump.sql
 /mysql-data/
 /mysql-slave/
 /meili-data/
-.DS_Store
+tmp_output.txt

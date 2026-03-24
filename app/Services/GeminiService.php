@@ -10,7 +10,7 @@ class GeminiService implements AIServiceInterface
 {
     public function summarize(string $text): string
     {
-        $apiKey = trim((string) env('GEMINI_API_KEY', ''));
+        $apiKey = trim((string) config('services.gemini.api_key', ''));
         if ($apiKey === '') throw new \RuntimeException('GEMINI_API_KEY is missing.');
 
         $models = ['gemini-1.5-flash', 'gemini-1.5-flash-latest'];
