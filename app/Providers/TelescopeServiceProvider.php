@@ -59,12 +59,14 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
                 return false;
             }
 
-            // Persist access in session so Telescope SPA navigation keeps working
+            $token = hash_hmac('sha256', $key, config('app.key'));
+
             if (request()->query('key') === $key) {
-                session()->put('telescope_authorized', true);
+                cookie()->queue('telescope_auth', $token, 60 * 24);
+                return true;
             }
 
-            return session()->get('telescope_authorized', false);
+            return request()->cookie('telescope_auth') === $token;
         });
     }
 }

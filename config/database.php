@@ -46,7 +46,7 @@ return [
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),
-            // Tambahkan bagian Read & Write di sini
+            // Read & Write connections
             'read' => [
                 'host' => [env('DB_SLAVE_HOST', env('DB_HOST', '127.0.0.1'))],
             ],
